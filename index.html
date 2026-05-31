@@ -118,12 +118,14 @@
 
     * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
     html {
-      height:100vh; height:100dvh; height:-webkit-fill-available;
+      height:100%;
       background:#0f3460;
+      overscroll-behavior:none;
     }
     body {
-      min-height:100vh; min-height:100dvh; min-height:-webkit-fill-available;
+      height:100%;
       overflow-x:hidden;
+      overscroll-behavior:none;
       display:flex; flex-direction:column; position:relative;
       font-family:'Cairo','IBM Plex Sans Arabic',sans-serif;
       background:linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-low) 100%);
