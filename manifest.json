@@ -1,0 +1,22 @@
+{
+  "name": "مواقيت الصلاة - الأردن",
+  "short_name": "مواقيت الصلاة",
+  "description": "مواقيت الصلاة من وزارة الأوقاف الأردنية - تعمل بدون إنترنت",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%231a1a2e' width='192' height='192' rx='40'/><path d='M96 28 L108 56 L138 56 L114 76 L124 106 L96 88 L68 106 L78 76 L54 56 L84 56Z' fill='%23e8b860'/><rect x='72' y='108' width='48' height='60' rx='6' fill='%23e8b860'/><path d='M64 168 Q96 150 128 168 L128 172 L64 172Z' fill='%23e8b860'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%231a1a2e' width='512' height='512' rx='108'/><path d='M256 72 L288 144 L368 144 L304 200 L330 280 L256 232 L182 280 L208 200 L144 144 L224 144Z' fill='%23e8b860'/><rect x='190' y='290' width='132' height='160' rx='16' fill='%23e8b860'/><path d='M170 450 Q256 400 342 450 L342 460 L170 460Z' fill='%23e8b860'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
