@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="مواقيت الصلاة"/>
@@ -11,6 +11,9 @@
   <link rel="manifest" href="manifest.json"/>
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png"/>
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <script src="prayers-data.js"></script>
 
   <style>
@@ -21,8 +24,7 @@
       --surface: rgba(255,255,255,0.06);
       --surface-strong: rgba(255,255,255,0.1);
       --text: #e8e8f0;
-      --text-dim: #8892a4;
-      --text-glow: #ffd700;
+      --text-dim: #9aa4b6;
       --accent: #e8b860;
       --accent-glow: rgba(232,184,96,0.3);
       --overlay: rgba(0,0,0,0.3);
@@ -33,7 +35,6 @@
       --transition: 0.8s ease;
     }
 
-    /* DAWN - Fajr to Shuruq */
     body.dawn {
       --sky-top: #1a1a3e;
       --sky-mid: #2d1b69;
@@ -44,7 +45,6 @@
       --prayer-active-border: rgba(232,150,94,0.4);
     }
 
-    /* MORNING - Shuruq to Dhuhr */
     body.morning {
       --sky-top: #4a90d9;
       --sky-mid: #87ceeb;
@@ -62,7 +62,6 @@
       --overlay: rgba(255,255,255,0.15);
     }
 
-    /* MIDDAY - Dhuhr to Asr */
     body.midday {
       --sky-top: #5b9bd5;
       --sky-mid: #87ceeb;
@@ -80,7 +79,6 @@
       --overlay: rgba(255,255,255,0.1);
     }
 
-    /* AFTERNOON - Asr to Maghrib */
     body.afternoon {
       --sky-top: #d4a54a;
       --sky-mid: #e8c56a;
@@ -98,7 +96,6 @@
       --overlay: rgba(255,255,255,0.08);
     }
 
-    /* MAGHRIB - Maghrib to Isha */
     body.maghrib {
       --sky-top: #2c1654;
       --sky-mid: #6b2440;
@@ -109,7 +106,6 @@
       --prayer-active-border: rgba(240,128,80,0.4);
     }
 
-    /* NIGHT - Isha to Fajr */
     body.night {
       --sky-top: #0a0a1a;
       --sky-mid: #111130;
@@ -123,12 +119,17 @@
     * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
     html, body {
       height:100%; overflow-x:hidden;
-      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      font-family:'Cairo','IBM Plex Sans Arabic',sans-serif;
       background:linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-low) 100%);
-      transition:background 1.2s ease;
+      transition:background 0.8s ease;
       color:var(--text);
+      -webkit-font-smoothing:antialiased;
     }
     body { display:flex; flex-direction:column; position:relative; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration:0.01ms !important; animation-duration:0.01ms !important; }
+    }
 
     .sky-overlay {
       position:fixed; top:0;left:0;right:0;bottom:0; pointer-events:none; z-index:0;
@@ -150,7 +151,8 @@
     .sun-glow.show { opacity:1; }
     .moon-icon {
       position:fixed; top:6%;right:12%; pointer-events:none; z-index:0;
-      font-size:3rem; opacity:0; transition:opacity var(--transition);
+      opacity:0; transition:opacity var(--transition);
+      width:48px; height:48px;
     }
     .moon-icon.show { opacity:0.7; }
 
@@ -162,29 +164,31 @@
     }
     .header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
     .header .city-btn {
-      position:absolute; left:44px; top:50%; transform:translateY(-50%);
-      font-size:0.72rem; padding:8px 14px; border-radius:20px;
+      position:absolute; left:56px; top:50%; transform:translateY(-50%);
+      font-size:0.72rem; padding:8px 14px; border-radius:20px; min-height:44px;
       border:1px solid var(--surface-strong); background:var(--surface);
       color:var(--text); cursor:pointer; -webkit-appearance:none;
-      font-weight:600;
+      font-weight:600; font-family:inherit;
+      transition:background 0.2s,border-color 0.2s;
     }
+    .header .city-btn:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
     .header .share-btn {
       position:absolute; left:8px; top:50%; transform:translateY(-50%);
-      width:36px; height:36px; border-radius:50%;
+      width:44px; height:44px; border-radius:50%;
       border:1px solid var(--surface-strong); background:var(--surface);
       color:var(--text); cursor:pointer; -webkit-appearance:none;
       display:flex; align-items:center; justify-content:center;
+      font-family:inherit;
+      transition:background 0.2s,border-color 0.2s;
     }
+    .header .share-btn:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 
     .main-scroll {
       flex:1; overflow-y:auto; padding:0 14px calc(90px + env(safe-area-inset-bottom));
       -webkit-overflow-scrolling:touch; position:relative; z-index:2;
     }
 
-    /* current prayer hero */
-    .hero {
-      text-align:center; padding:16px 0 8px;
-    }
+    .hero { text-align:center; padding:16px 0 8px; }
     .hero .current-name {
       font-size:2.4rem; font-weight:800; letter-spacing:1px;
       text-shadow:0 2px 20px var(--accent-glow);
@@ -196,12 +200,13 @@
       padding:10px 24px; display:inline-block;
       margin-top:8px; backdrop-filter:blur(8px);
       -webkit-backdrop-filter:blur(8px);
+      font-variant-numeric:tabular-nums;
+      font-family:'IBM Plex Sans Arabic','Cairo',sans-serif;
     }
     .hero .next-label {
       font-size:0.72rem; color:var(--text-dim); margin-top:6px;
     }
 
-    /* today's times */
     .today-grid {
       display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
       margin:16px 0;
@@ -209,33 +214,45 @@
     .prayer-cell {
       background:var(--prayer-bg); border:1px solid var(--surface-strong);
       border-radius:14px; padding:12px 8px; text-align:center;
-      transition:all 0.3s; backdrop-filter:blur(4px);
-      -webkit-backdrop-filter:blur(4px);
+      transition:background 0.3s,border-color 0.3s,box-shadow 0.3s,transform 0.15s;
+      backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+      cursor:pointer; min-height:68px;
+      display:flex; flex-direction:column; justify-content:center;
     }
+    .prayer-cell:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
     .prayer-cell.active {
-      background:var(--prayer-active-bg);
-      border-color:var(--prayer-active-border);
-      box-shadow:0 0 20px var(--accent-glow);
-      transform:scale(1.03);
+      background:rgba(255,255,255,0.12);
+      border-color:rgba(255,255,255,0.25);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,0.1), 0 0 24px -4px var(--accent-glow);
+      backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+      transform:scale(1.02);
+    }
+    body.morning .prayer-cell.active,
+    body.midday .prayer-cell.active,
+    body.afternoon .prayer-cell.active {
+      background:rgba(0,0,0,0.08);
+      border-color:rgba(0,0,0,0.15);
+      box-shadow:inset 0 0 0 1px rgba(0,0,0,0.06), 0 0 24px -4px var(--accent-glow);
     }
     .prayer-cell .p-name {
       font-size:0.7rem; color:var(--text-dim); margin-bottom:4px;
     }
+    .prayer-cell.active .p-name { color:var(--accent); }
     .prayer-cell .p-time {
       font-size:1.25rem; font-weight:700;
+      font-variant-numeric:tabular-nums;
+      font-family:'IBM Plex Sans Arabic','Cairo',sans-serif;
     }
     .prayer-cell .p-label {
       display:block; font-size:0.58rem; color:var(--accent);
       margin-top:2px; font-weight:600;
     }
 
-    /* hijri date */
     .hijri-date {
       text-align:center; font-size:0.8rem; color:var(--text-dim);
       margin-bottom:12px; direction:rtl;
     }
 
-    /* bottom nav */
     .bottom-nav {
       position:fixed; bottom:0;left:0;right:0; z-index:10;
       background:var(--countdown-bg); border-top:1px solid var(--surface-strong);
@@ -247,27 +264,28 @@
       flex:1; padding:10px 6px; border-radius:12px; border:none;
       background:transparent; color:var(--text-dim);
       font-size:0.72rem; font-weight:600; cursor:pointer;
-      transition:all 0.2s; -webkit-appearance:none;
+      transition:background 0.2s,color 0.2s; -webkit-appearance:none;
       display:flex; flex-direction:column; align-items:center; gap:3px;
+      min-height:44px; font-family:inherit;
     }
+    .bottom-nav button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
     .bottom-nav button.active { color:var(--accent); }
-    .bottom-nav button .nav-icon { font-size:1.3rem; }
+    .bottom-nav button .nav-icon svg { width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 
-    /* month view */
     .month-nav {
       display:flex; align-items:center; justify-content:space-between;
       padding:8px 4px 12px;
     }
-    .month-nav .month-label {
-      font-size:1rem; font-weight:700;
-    }
+    .month-nav .month-label { font-size:1rem; font-weight:700; }
     .month-nav button {
-      width:36px; height:36px; border-radius:50%;
+      width:44px; height:44px; border-radius:50%;
       border:1px solid var(--surface-strong); background:var(--surface);
       color:var(--text); font-size:1.1rem; cursor:pointer;
       display:flex; align-items:center; justify-content:center;
-      -webkit-appearance:none;
+      -webkit-appearance:none; font-family:inherit;
+      transition:background 0.2s,border-color 0.2s;
     }
+    .month-nav button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
     .cal-grid {
       display:grid; grid-template-columns:repeat(7,1fr);
       gap:3px; text-align:center;
@@ -281,21 +299,23 @@
       display:flex; flex-direction:column; align-items:center; justify-content:center;
       cursor:pointer; background:var(--surface);
       border:1px solid var(--surface-strong);
-      transition:all 0.15s; color:var(--text); padding:3px 2px;
-      position:relative;
+      transition:background 0.15s,border-color 0.15s; color:var(--text); padding:3px 2px;
+      position:relative; font-family:inherit;
     }
+    .cal-cell:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
     .cal-cell:active { background:var(--prayer-active-bg); }
     .cal-cell.empty { background:transparent; border-color:transparent; pointer-events:none; }
     .cal-cell.today { border-color:var(--accent); }
     .cal-cell .cal-fajr {
       font-size:0.48rem; color:var(--text-dim); margin-top:1px;
+      font-variant-numeric:tabular-nums;
+      font-family:'IBM Plex Sans Arabic','Cairo',sans-serif;
     }
     .cal-legend {
       display:flex; gap:16px; justify-content:center; padding:14px 0;
       font-size:0.68rem; color:var(--text-dim);
     }
 
-    /* city sheet */
     .sheet-backdrop {
       position:fixed; top:0;left:0;right:0;bottom:0;
       background:rgba(0,0,0,0.5); z-index:20;
@@ -311,15 +331,13 @@
       max-height:70vh; overflow-y:auto;
     }
     .city-sheet.open { transform:translateY(0); }
-    .city-sheet h3 {
-      font-size:1rem; margin-bottom:12px; color:var(--text);
-    }
+    .city-sheet h3 { font-size:1rem; margin-bottom:12px; color:var(--text); }
     .city-sheet .city-option {
       display:block; width:100%; padding:14px; margin-bottom:6px;
       border-radius:12px; border:1px solid var(--surface-strong);
       background:var(--surface); color:var(--text);
       font-size:0.88rem; font-weight:600; cursor:pointer;
-      -webkit-appearance:none; text-align:right;
+      -webkit-appearance:none; text-align:right; font-family:inherit;
     }
     .city-sheet .city-option.selected {
       border-color:var(--accent); background:var(--prayer-active-bg);
@@ -328,21 +346,17 @@
       display:block; margin:12px auto 0; padding:12px 40px;
       border-radius:24px; border:none; background:var(--surface-strong);
       color:var(--text); font-size:0.85rem; font-weight:700;
-      cursor:pointer; -webkit-appearance:none;
+      cursor:pointer; -webkit-appearance:none; font-family:inherit;
+      min-height:44px;
     }
 
-    /* refresh indicator */
     .refresh-bar {
       text-align:center; font-size:0.65rem; color:var(--text-dim);
       padding:8px; opacity:0.6;
     }
-    .refresh-bar a {
-      color:inherit; text-decoration:underline;
-    }
+    .refresh-bar a { color:inherit; text-decoration:underline; }
 
-    .loading {
-      text-align:center; padding:40px; color:var(--text-dim);
-    }
+    .loading { text-align:center; padding:40px; color:var(--text-dim); }
   </style>
 </head>
 <body id="body">
@@ -350,12 +364,12 @@
   <div class="sky-overlay"></div>
   <div class="stars" id="stars"></div>
   <div class="sun-glow"></div>
-  <div class="moon-icon">🌙</div>
+  <div class="moon-icon" id="moonIcon"><svg viewBox="0 0 100 100" fill="none"><path d="M60 10C35 10 15 30 15 55C15 80 35 95 60 95C45 85 38 70 38 55C38 40 45 20 60 10Z" fill="rgba(255,255,255,.85)"/></svg></div>
 
   <div class="header">
     <h1>مواقيت الصلاة</h1>
-    <span class="city-btn" onclick="openCitySheet()" id="cityBtn">عمّان</span>
-    <button class="share-btn" onclick="shareApp()" title="مشاركة">
+    <span class="city-btn" onclick="openCitySheet()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openCitySheet()}" id="cityBtn" role="button" tabindex="0" aria-label="معلومات المدينة">عمّان</span>
+    <button class="share-btn" onclick="shareApp()" title="مشاركة" aria-label="مشاركة التطبيق">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
     </button>
   </div>
@@ -365,8 +379,8 @@
   </div>
 
   <div class="bottom-nav">
-    <button onclick="switchTab('today')" id="btnToday" class="active"><span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L14 12 L22 12 L15 18 L18 22 L12 17 L6 22 L9 18 L2 12 L10 12Z"/></svg></span>اليوم</button>
-    <button onclick="switchTab('month')" id="btnMonth"><span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></span>الشهر</button>
+    <button onclick="switchTab('today')" id="btnToday" class="active" aria-label="مواقيت اليوم"><span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.26L16 6l-2.91.74L12 10l-1.09-3.26L8 6l2.91-.74L12 2zM12 14l1.09 3.26L16 18l-2.91.74L12 22l-1.09-3.26L8 18l2.91-.74L12 14z"/></svg></span>اليوم</button>
+    <button onclick="switchTab('month')" id="btnMonth" aria-label="عرض الشهر"><span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></span>الشهر</button>
   </div>
 
   <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeCitySheet()"></div>
@@ -422,8 +436,6 @@ let activeTab = 'today';
 let calYear, calMonth;
 let refreshTimer = null;
 
-// ═══════════════ INIT ═══════════════
-
 function checkTimezone() {
   const offset = -new Date().getTimezoneOffset();
   if (offset !== 180) {
@@ -461,16 +473,11 @@ function init() {
   generateStars();
 }
 
-// ═══════════════ DATA ═══════════════
-
 function getDayTimes(dateStr) {
   return PRAYER_MAP[dateStr] || null;
 }
 
-// ═══════════════ THEME ═══════════════
-
 function getCurrentAndNextPrayer(times, dayOffset) {
-  // dayOffset: 0 for today, 1 for tomorrow (prayer times need 24h added to be relative to now)
   if (!times) return { current: '...', next: '...', nextTime: '...', secondsLeft: 0, currentName: '...', currentPeriod: 'night', isBeforeFajr: false, isAfterIsha: false };
 
   const now = new Date();
@@ -486,7 +493,6 @@ function getCurrentAndNextPrayer(times, dayOffset) {
   const names = {};
   PRAYER_KEYS.forEach((k, i) => { names[k] = PRAYER_NAMES[i]; });
 
-  // After isha (relative to now): next fajr is tomorrow
   if (t >= prayers[5].timeSecs) {
     return {
       current: 'العشاء',
@@ -515,7 +521,6 @@ function getCurrentAndNextPrayer(times, dayOffset) {
     }
   }
 
-  // Before fajr
   return {
     current: 'العشاء',
     currentName: 'العشاء',
@@ -556,14 +561,13 @@ function applyTheme(period) {
   };
   if (meta) meta.content = colors[period] || '#0a0a1a';
 
-  // Toggle stars, sun glow, moon icon
   const showStars = period === 'night' || period === 'dawn';
   const showSun = period === 'morning' || period === 'midday' || period === 'afternoon';
   const showMoon = period === 'night';
 
   document.getElementById('stars').classList.toggle('show', showStars);
   document.querySelector('.sun-glow').classList.toggle('show', showSun);
-  document.querySelector('.moon-icon').classList.toggle('show', showMoon);
+  document.getElementById('moonIcon').classList.toggle('show', showMoon);
 }
 
 function getActiveDate() {
@@ -584,8 +588,6 @@ function getActiveDate() {
   return today;
 }
 
-// ═══════════════ RENDER TODAY ═══════════════
-
 function renderToday() {
   const activeDate = getActiveDate();
   const times = getDayTimes(activeDate);
@@ -600,7 +602,7 @@ function renderToday() {
   html += `<div class="hero">`;
   if (times) {
     html += `<div class="current-name">${info.currentName || '...'}</div>`;
-    html += `<div class="countdown" id="countdown">${formatCountdown(info.secondsLeft)}</div>`;
+    html += `<div class="countdown" id="countdown" aria-live="polite">${formatCountdown(info.secondsLeft)}</div>`;
     html += `<div class="next-label">متبقي حتى أذان ${info.next} — ${esc(info.nextTime)}</div>`;
     if (isNextDay) {
       html += `<div class="hijri-date" style="margin-top:8px;color:var(--accent);">بعد أذان العشاء — مواقيت ${esc(activeDate)}</div>`;
@@ -620,7 +622,6 @@ function renderToday() {
   if (times) {
     html += `<div class="today-grid">`;
     PRAYER_KEYS.forEach((key, i) => {
-      // Don't highlight when viewing next day's schedule (no prayer is currently active from tomorrow)
       const isActive = !isNextDay && !info.isBeforeFajr && info.currentName === PRAYER_NAMES[i];
       html += `
         <div class="prayer-cell ${isActive?'active':''}">
@@ -638,8 +639,6 @@ function renderToday() {
 
   document.getElementById('mainScroll').innerHTML = html;
 }
-
-// ═══════════════ RENDER MONTH ═══════════════
 
 function renderMonth() {
   const now = new Date();
@@ -678,7 +677,7 @@ function renderMonth() {
 
     const fajrTime = dayTimes ? dayTimes.fajr : '';
 
-    html += `<div class="${cls.join(' ')}" onclick="${dayTimes?`showDayDetail('${key}')`:''}">
+    html += `<div class="${cls.join(' ')}"${dayTimes?` role="button" tabindex="0" onclick="showDayDetail('${key}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showDayDetail('${key}')}"`:''}>
       <span>${d}</span>
       ${fajrTime ? `<span class="cal-fajr">فجر ${esc(fajrTime)}</span>` : ''}
     </div>`;
@@ -724,11 +723,9 @@ function showDayDetail(dateStr) {
     </div>`;
   });
   html += `</div>`;
-  html += `<button style="display:block;margin:12px auto;padding:10px 30px;border-radius:24px;border:none;background:var(--surface-strong);color:var(--text);font-size:0.85rem;font-weight:600;cursor:pointer;-webkit-appearance:none;" onclick="renderMonth()">رجوع</button>`;
+  html += `<button style="display:block;margin:12px auto;padding:10px 30px;border-radius:24px;border:none;background:var(--surface-strong);color:var(--text);font-size:0.85rem;font-weight:600;cursor:pointer;-webkit-appearance:none;min-height:44px;font-family:inherit;" onclick="renderMonth()">رجوع</button>`;
   document.getElementById('mainScroll').innerHTML = html;
 }
-
-// ═══════════════ TABS ═══════════════
 
 function switchTab(tab) {
   activeTab = tab;
@@ -740,8 +737,6 @@ function switchTab(tab) {
 
   document.getElementById('mainScroll').scrollTop = 0;
 }
-
-// ═══════════════ CITY SHEET ═══════════════
 
 function openCitySheet() {
   document.getElementById('citySheet').classList.add('open');
@@ -774,8 +769,6 @@ async function shareApp() {
   }
 }
 
-// ═══════════════ AUTO REFRESH ═══════════════
-
 let lastPeriod = '';
 
 function startAutoRefresh() {
@@ -802,8 +795,6 @@ function updateCountdownOnly() {
   }
 }
 
-// ═══════════════ STARS ═══════════════
-
 function generateStars() {
   const container = document.getElementById('stars');
   if (!container) return;
@@ -819,8 +810,6 @@ function generateStars() {
   html += '</svg>';
   container.innerHTML = html;
 }
-
-// ═══════════════ INIT ═══════════════
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(()=>{});

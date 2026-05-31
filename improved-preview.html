@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>مواقيت الصلاة — 3 مقارنات خطوط</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Noto+Kufi+Arabic:wght@400;700;800&family=Cairo:wght@400;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#fff;font-family:'Tajawal',sans-serif;padding:20px 10px}
+h1{text-align:center;font-size:1.2rem;font-weight:700;margin-bottom:4px}
+.sub{font-size:.7rem;color:rgba(255,255,255,.35);text-align:center;margin-bottom:24px;line-height:1.7}
+.compare{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;padding-bottom:20px}
+.variant{text-align:center;flex-shrink:0;width:375px}
+.variant-label{font-size:.8rem;font-weight:700;margin-bottom:4px;color:rgba(255,255,255,.8)}
+.variant-sub{font-size:.6rem;color:rgba(255,255,255,.3);margin-bottom:10px}
+.phone-wrap{width:360px;height:740px;border-radius:44px;overflow:hidden;position:relative;border:2px solid rgba(255,255,255,.06);margin:0 auto}
+
+.themed{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  overflow-y:auto;overflow-x:hidden;
+  transition:background .8s ease,color .4s;
+  background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 55%,var(--sky-low) 100%);
+  color:var(--text);
+}
+
+.themed *{box-sizing:border-box}
+
+/* ══════ THEMES ══════ */
+.themed{--sky-top:#0a0a1a;--sky-mid:#111130;--sky-low:#1a1a3e;--accent:#c8c0e0;--accent-glow:rgba(200,192,224,.3);--surface:rgba(255,255,255,.06);--surface-strong:rgba(255,255,255,.1);--text:#e8e8f0;--text-dim:#9aa4b6;--prayer-bg:rgba(255,255,255,.04);--countdown-bg:rgba(0,0,0,.35);--overlay:rgba(0,0,0,.3)}
+
+.themed.t-dawn{--sky-top:#1a1a3e;--sky-mid:#2d1b69;--sky-low:#c44b2b;--accent:#e8965e;--accent-glow:rgba(232,150,94,.4)}
+.themed.t-morning{--sky-top:#4a90d9;--sky-mid:#87ceeb;--sky-low:#ffe4b5;--accent:#f0a050;--accent-glow:rgba(240,160,80,.4);--text:#2d3436;--text-dim:#636e72;--surface:rgba(0,0,0,.04);--surface-strong:rgba(0,0,0,.08);--prayer-bg:rgba(0,0,0,.03);--countdown-bg:rgba(255,255,255,.6);--overlay:rgba(255,255,255,.15)}
+.themed.t-midday{--sky-top:#5b9bd5;--sky-mid:#87ceeb;--sky-low:#e8d5b7;--accent:#e8a040;--accent-glow:rgba(232,160,64,.35);--text:#2d3436;--text-dim:#636e72;--surface:rgba(0,0,0,.04);--surface-strong:rgba(0,0,0,.08);--prayer-bg:rgba(0,0,0,.03);--countdown-bg:rgba(255,255,255,.7);--overlay:rgba(255,255,255,.1)}
+.themed.t-afternoon{--sky-top:#d4a54a;--sky-mid:#e8c56a;--sky-low:#f5d580;--accent:#c8862e;--accent-glow:rgba(200,134,46,.4);--text:#3d3020;--text-dim:#6b5d4a;--surface:rgba(0,0,0,.05);--surface-strong:rgba(0,0,0,.1);--prayer-bg:rgba(0,0,0,.04);--countdown-bg:rgba(255,255,255,.6);--overlay:rgba(255,255,255,.08)}
+.themed.t-maghrib{--sky-top:#2c1654;--sky-mid:#6b2440;--sky-low:#e8743c;--accent:#f08050;--accent-glow:rgba(240,128,80,.45)}
+
+/* ══════ SKY ELEMENTS ══════ */
+.themed .sky-overlay{position:absolute;inset:0;background:var(--overlay);pointer-events:none;z-index:0;border-radius:inherit}
+.themed .stars-layer{position:absolute;top:0;left:0;right:0;bottom:65%;pointer-events:none;z-index:1;opacity:0;transition:opacity .8s}
+.themed .stars-layer.show{opacity:.7}
+.themed .moon-layer{position:absolute;top:6%;right:12%;pointer-events:none;z-index:1;opacity:0;transition:opacity .8s}
+.themed .moon-layer.show{opacity:.7}
+.themed .sun-layer{position:absolute;top:5%;left:50%;transform:translateX(-50%);width:120px;height:120px;border-radius:50%;pointer-events:none;z-index:1;opacity:0;transition:opacity .8s;background:radial-gradient(circle,rgba(255,220,100,.7) 0%,rgba(255,180,50,.3) 40%,transparent 70%)}
+.themed .sun-layer.show{opacity:1}
+
+/* ══════ CONTENT ══════ */
+.themed .content{position:relative;z-index:2;flex:1;padding:14px 16px 16px;display:flex;flex-direction:column}
+.themed .header-bar{display:flex;align-items:center;justify-content:center;padding:4px 0 8px;position:relative;flex-shrink:0}
+.themed .header-bar h1{font-size:1.05rem;font-weight:700;letter-spacing:.5px}
+
+.themed .hero{text-align:center;padding:8px 0 4px;flex-shrink:0}
+.themed .hero .current-name{font-size:2.6rem;font-weight:800;letter-spacing:.5px;text-shadow:0 2px 20px var(--accent-glow);color:var(--accent);line-height:1.15}
+.themed .hero .countdown{font-size:1.5rem;font-weight:700;background:var(--countdown-bg);border-radius:16px;padding:10px 24px;display:inline-block;margin-top:6px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-variant-numeric:tabular-nums}
+.themed .hero .next-label{font-size:.72rem;color:var(--text-dim);margin-top:6px}
+.themed .hero .sub-info{font-size:.75rem;color:var(--accent);margin-top:4px}
+.themed .hero .date-line{font-size:.72rem;color:var(--text-dim);margin-top:2px;font-variant-numeric:tabular-nums}
+
+/* ══════ PRAYER GRID — REDESIGNED ACTIVE CELL ══════ */
+.themed .today-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.themed .prayer-cell{background:var(--prayer-bg);border:1px solid var(--surface-strong);border-radius:14px;padding:12px 8px;text-align:center;transition:background .3s,border-color .3s,box-shadow .3s,transform .15s;cursor:pointer;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);min-height:68px;display:flex;flex-direction:column;justify-content:center}
+.themed .prayer-cell .p-name{font-size:.7rem;color:var(--text-dim);margin-bottom:4px}
+.themed .prayer-cell .p-time{font-size:1.25rem;font-weight:700;font-variant-numeric:tabular-nums}
+.themed .prayer-cell .p-label{display:block;font-size:.55rem;color:var(--accent);margin-top:1px;font-weight:600}
+
+.themed .prayer-cell.active{
+  background:rgba(255,255,255,.12);
+  border-color:rgba(255,255,255,.25);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 0 24px -4px var(--accent-glow);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  transform:scale(1.02);
+}
+.themed.t-morning .prayer-cell.active,
+.themed.t-midday .prayer-cell.active,
+.themed.t-afternoon .prayer-cell.active{
+  background:rgba(0,0,0,.08);
+  border-color:rgba(0,0,0,.15);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.06),0 0 24px -4px var(--accent-glow);
+}
+.themed .prayer-cell.active .p-name{color:var(--accent)}
+.themed .prayer-cell.active .p-time{color:var(--text)}
+
+/* ══════ BOTTOM NAV ══════ */
+.themed .bottom-nav{position:absolute;bottom:0;left:0;right:0;z-index:10;background:var(--countdown-bg);border-top:1px solid var(--surface-strong);display:flex;padding:6px 8px 8px;gap:4px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);justify-content:space-around}
+.themed .bottom-nav button{flex:1;padding:10px 6px;border-radius:12px;border:none;background:transparent;color:var(--text-dim);font-size:.72rem;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:44px;-webkit-appearance:none;transition:background .2s,color .2s}
+.themed .bottom-nav button.active{color:var(--accent)}
+.themed .bottom-nav button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+.themed .footer-link{text-align:center;font-size:.65rem;color:var(--text-dim);opacity:.6;padding:6px 0;position:relative;z-index:2}
+.themed .footer-link a{color:inherit;text-decoration:underline}
+
+.theme-btns{display:flex;gap:4px;justify-content:center;margin:8px 0 4px;flex-wrap:wrap}
+.theme-btns button{padding:4px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);font-size:.58rem;cursor:pointer;font-family:'IBM Plex Sans Arabic',sans-serif;transition:background .2s,border-color .2s}
+.theme-btns button:hover,.theme-btns button.active{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff}
+
+.moon-svg{width:48px;height:48px}
+
+.font-compare{display:flex;gap:20px;justify-content:center;margin:40px 0 10px;flex-wrap:wrap}
+.font-box{text-align:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px 24px;width:260px}
+.font-box .sample-name{font-size:2.2rem;font-weight:800;margin-bottom:8px;letter-spacing:.5px}
+.font-box .sample-time{font-size:1.5rem;font-weight:700;margin-bottom:8px;font-variant-numeric:tabular-nums}
+.font-box .sample-sub{font-size:.7rem;color:#9aa4b6;margin-bottom:4px}
+.font-box .sample-label{font-size:.6rem;color:#8892a4;margin-top:4px}
+</style>
+</head>
+<body>
+
+<h1>مواقيت الصلاة — 3 مقارنات خطوط</h1>
+<div class="sub">نفس التصميم مع كل المواضيع والنجوم والهلال — اختر الخط<br>التحسينات: tabular-nums · خلية الصلاة النشطة محسّنة · أيقونات SVG · تباين أعلى</div>
+
+<!-- ════════ FONT COMPARISON CLOSE-UP ════════ -->
+<div style="text-align:center;margin-bottom:8px;font-size:.75rem;color:rgba(255,255,255,.5)">← مقارنة الخطوط بشكل كبير →</div>
+
+<div class="font-compare">
+<div class="font-box" style="font-family:'Tajawal','IBM Plex Sans Arabic',sans-serif">
+<div class="sample-name" style="font-family:'Tajawal',sans-serif;color:#c8c0e0;text-shadow:0 2px 20px rgba(200,192,224,.3)">العشاء</div>
+<div class="sample-time" style="font-family:'IBM Plex Sans Arabic','Tajawal',sans-serif;color:#e8e8f0">21:15</div>
+<div class="sample-sub">متبقي حتى أذان الفجر</div>
+<div class="sample-label">A — Tajawal: أنيق، أنحف، عصري</div>
+</div>
+<div class="font-box" style="font-family:'Noto Kufi Arabic','IBM Plex Sans Arabic',sans-serif">
+<div class="sample-name" style="font-family:'Noto Kufi Arabic',sans-serif;color:#c8c0e0;text-shadow:0 2px 20px rgba(200,192,224,.3)">العشاء</div>
+<div class="sample-time" style="font-family:'IBM Plex Sans Arabic','Noto Kufi Arabic',sans-serif;color:#e8e8f0">21:15</div>
+<div class="sample-sub">متبقي حتى أذان الفجر</div>
+<div class="sample-label">B — Noto Kufi: هندسي، زوايا حادة، أعرض</div>
+</div>
+<div class="font-box" style="font-family:'Cairo','IBM Plex Sans Arabic',sans-serif">
+<div class="sample-name" style="font-family:'Cairo',sans-serif;color:#c8c0e0;text-shadow:0 2px 20px rgba(200,192,224,.3)">العشاء</div>
+<div class="sample-time" style="font-family:'IBM Plex Sans Arabic','Cairo',sans-serif;color:#e8e8f0">21:15</div>
+<div class="sample-sub">متبقي حتى أذان الفجر</div>
+<div class="sample-label">C — Cairo: مستدير، ودود، أنعم</div>
+</div>
+</div>
+
+<div style="text-align:center;margin:20px 0 10px;font-size:.8rem;color:rgba(255,255,255,.5)">← المعاينة على الهاتف (جرّب كل الموضيع) →</div>
+
+<!-- ════════ PHONE PREVIEWS ════════ -->
+<div class="compare">
+
+<!-- ════════ VARIANT A: TAJAWAL ════════ -->
+<div class="variant">
+<div class="variant-label">A — Tajawal</div>
+<div class="variant-sub">عناوين: Tajawal 800 · أرقام: IBM Plex Sans Arabic</div>
+<div class="theme-btns" data-target="va">
+<button class="active" data-theme="night">ليل</button>
+<button data-theme="dawn">فجر</button>
+<button data-theme="morning">صباح</button>
+<button data-theme="midday">ظهر</button>
+<button data-theme="afternoon">عصر</button>
+<button data-theme="maghrib">مغرب</button>
+</div>
+<div class="phone-wrap">
+<div class="themed t-night" id="va" style="font-family:'Tajawal','IBM Plex Sans Arabic',sans-serif">
+<style>#va,#va *{font-family:'Tajawal','IBM Plex Sans Arabic',sans-serif}</style>
+<div class="sky-overlay"></div>
+<div class="stars-layer show"><svg viewBox="0 0 400 300" style="width:100%;height:100%"><circle cx="23" cy="18" r=".6" fill="white" opacity=".5"/><circle cx="67" cy="42" r=".9" fill="white" opacity=".7"/><circle cx="112" cy="15" r=".4" fill="white" opacity=".35"/><circle cx="155" cy="55" r="1.1" fill="white" opacity=".8"/><circle cx="198" cy="28" r=".5" fill="white" opacity=".4"/><circle cx="243" cy="72" r=".7" fill="white" opacity=".55"/><circle cx="287" cy="12" r=".8" fill="white" opacity=".65"/><circle cx="332" cy="48" r=".3" fill="white" opacity=".3"/><circle cx="370" cy="22" r=".9" fill="white" opacity=".6"/><circle cx="45" cy="88" r=".4" fill="white" opacity=".4"/><circle cx="89" cy="95" r="1" fill="white" opacity=".75"/><circle cx="134" cy="110" r=".5" fill="white" opacity=".45"/><circle cx="178" cy="80" r=".8" fill="white" opacity=".55"/><circle cx="223" cy="105" r=".6" fill="white" opacity=".5"/><circle cx="267" cy="92" r="1.2" fill="white" opacity=".85"/><circle cx="312" cy="78" r=".4" fill="white" opacity=".35"/><circle cx="356" cy="115" r=".7" fill="white" opacity=".6"/><circle cx="38" cy="145" r=".5" fill="white" opacity=".4"/><circle cx="82" cy="160" r=".9" fill="white" opacity=".7"/><circle cx="127" cy="138" r=".3" fill="white" opacity=".25"/><circle cx="171" cy="172" r="1" fill="white" opacity=".8"/><circle cx="216" cy="155" r=".6" fill="white" opacity=".5"/><circle cx="260" cy="180" r=".8" fill="white" opacity=".65"/><circle cx="305" cy="148" r=".4" fill="white" opacity=".3"/><circle cx="349" cy="168" r=".7" fill="white" opacity=".55"/><circle cx="15" cy="210" r=".5" fill="white" opacity=".4"/><circle cx="58" cy="228" r=".9" fill="white" opacity=".75"/><circle cx="103" cy="195" r=".6" fill="white" opacity=".5"/><circle cx="148" cy="240" r="1.1" fill="white" opacity=".85"/><circle cx="193" cy="215" r=".4" fill="white" opacity=".35"/><circle cx="238" cy="255" r=".7" fill="white" opacity=".6"/><circle cx="282" cy="202" r=".8" fill="white" opacity=".55"/><circle cx="327" cy="235" r=".5" fill="white" opacity=".4"/><circle cx="371" cy="270" r=".9" fill="white" opacity=".7"/><circle cx="55" cy="195" r=".6" fill="white" opacity=".5"/><circle cx="165" cy="260" r=".8" fill="white" opacity=".65"/></svg></div>
+<div class="moon-layer show"><svg class="moon-svg" viewBox="0 0 100 100" fill="none"><path d="M60 10C35 10 15 30 15 55C15 80 35 95 60 95C45 85 38 70 38 55C38 40 45 20 60 10Z" fill="rgba(255,255,255,.85)"/></svg></div>
+<div class="sun-layer"></div>
+
+<div class="content">
+<div class="header-bar"><h1>مواقيت الصلاة</h1></div>
+<div class="hero">
+<div class="current-name">العشاء</div>
+<div class="countdown">4:32:15</div>
+<div class="next-label">متبقي حتى أذان الفجر — <span style="font-variant-numeric:tabular-nums">03:53</span></div>
+<div class="sub-info">الليل — العشاء من اليوم السابق</div>
+<div class="date-line">2026-06-01</div>
+</div>
+<div class="today-grid">
+<div class="prayer-cell"><div class="p-name">الفجر</div><div class="p-time">03:53</div></div>
+<div class="prayer-cell"><div class="p-name">الشروق</div><div class="p-time">05:24</div></div>
+<div class="prayer-cell"><div class="p-name">الظهر</div><div class="p-time">12:35</div></div>
+<div class="prayer-cell"><div class="p-name">العصر</div><div class="p-time">16:15</div></div>
+<div class="prayer-cell"><div class="p-name">المغرب</div><div class="p-time">19:44</div></div>
+<div class="prayer-cell active"><div class="p-name">العشاء</div><div class="p-time">21:15</div><span class="p-label">الوقت الحالي</span></div>
+</div>
+<div class="footer-link"><a href="#">المصدر: وزارة الأوقاف الأردنية</a> | عمّان</div>
+</div>
+
+<div class="bottom-nav">
+<button class="active"><svg viewBox="0 0 24 24"><path d="M12 2l1.09 3.26L16 6l-2.91.74L12 10l-1.09-3.26L8 6l2.91-.74L12 2zM12 14l1.09 3.26L16 18l-2.91.74L12 22l-1.09-3.26L8 18l2.91-.74L12 14z"/></svg>اليوم</button>
+<button><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>الشهر</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ════════ VARIANT B: NOTO KUFI ARABIC ════════ -->
+<div class="variant">
+<div class="variant-label">B — Noto Kufi Arabic</div>
+<div class="variant-sub">عناوين: Noto Kufi Arabic 800 · أرقام: IBM Plex Sans Arabic</div>
+<div class="theme-btns" data-target="vb">
+<button class="active" data-theme="night">ليل</button>
+<button data-theme="dawn">فجر</button>
+<button data-theme="morning">صباح</button>
+<button data-theme="midday">ظهر</button>
+<button data-theme="afternoon">عصر</button>
+<button data-theme="maghrib">مغرب</button>
+</div>
+<div class="phone-wrap">
+<div class="themed t-night" id="vb" style="font-family:'Noto Kufi Arabic','IBM Plex Sans Arabic',sans-serif">
+<style>#vb,#vb *{font-family:'Noto Kufi Arabic','IBM Plex Sans Arabic',sans-serif}</style>
+<div class="sky-overlay"></div>
+<div class="stars-layer show"><svg viewBox="0 0 400 300" style="width:100%;height:100%"><circle cx="23" cy="18" r=".6" fill="white" opacity=".5"/><circle cx="67" cy="42" r=".9" fill="white" opacity=".7"/><circle cx="112" cy="15" r=".4" fill="white" opacity=".35"/><circle cx="155" cy="55" r="1.1" fill="white" opacity=".8"/><circle cx="198" cy="28" r=".5" fill="white" opacity=".4"/><circle cx="243" cy="72" r=".7" fill="white" opacity=".55"/><circle cx="287" cy="12" r=".8" fill="white" opacity=".65"/><circle cx="332" cy="48" r=".3" fill="white" opacity=".3"/><circle cx="370" cy="22" r=".9" fill="white" opacity=".6"/><circle cx="45" cy="88" r=".4" fill="white" opacity=".4"/><circle cx="89" cy="95" r="1" fill="white" opacity=".75"/><circle cx="134" cy="110" r=".5" fill="white" opacity=".45"/><circle cx="178" cy="80" r=".8" fill="white" opacity=".55"/><circle cx="223" cy="105" r=".6" fill="white" opacity=".5"/><circle cx="267" cy="92" r="1.2" fill="white" opacity=".85"/><circle cx="312" cy="78" r=".4" fill="white" opacity=".35"/><circle cx="356" cy="115" r=".7" fill="white" opacity=".6"/><circle cx="38" cy="145" r=".5" fill="white" opacity=".4"/><circle cx="82" cy="160" r=".9" fill="white" opacity=".7"/><circle cx="127" cy="138" r=".3" fill="white" opacity=".25"/><circle cx="171" cy="172" r="1" fill="white" opacity=".8"/><circle cx="216" cy="155" r=".6" fill="white" opacity=".5"/><circle cx="260" cy="180" r=".8" fill="white" opacity=".65"/><circle cx="305" cy="148" r=".4" fill="white" opacity=".3"/><circle cx="349" cy="168" r=".7" fill="white" opacity=".55"/><circle cx="15" cy="210" r=".5" fill="white" opacity=".4"/><circle cx="58" cy="228" r=".9" fill="white" opacity=".75"/><circle cx="103" cy="195" r=".6" fill="white" opacity=".5"/><circle cx="148" cy="240" r="1.1" fill="white" opacity=".85"/><circle cx="193" cy="215" r=".4" fill="white" opacity=".35"/><circle cx="238" cy="255" r=".7" fill="white" opacity=".6"/><circle cx="282" cy="202" r=".8" fill="white" opacity=".55"/><circle cx="327" cy="235" r=".5" fill="white" opacity=".4"/><circle cx="371" cy="270" r=".9" fill="white" opacity=".7"/><circle cx="55" cy="195" r=".6" fill="white" opacity=".5"/><circle cx="165" cy="260" r=".8" fill="white" opacity=".65"/></svg></div>
+<div class="moon-layer show"><svg class="moon-svg" viewBox="0 0 100 100" fill="none"><path d="M60 10C35 10 15 30 15 55C15 80 35 95 60 95C45 85 38 70 38 55C38 40 45 20 60 10Z" fill="rgba(255,255,255,.85)"/></svg></div>
+<div class="sun-layer"></div>
+
+<div class="content">
+<div class="header-bar"><h1>مواقيت الصلاة</h1></div>
+<div class="hero">
+<div class="current-name">العشاء</div>
+<div class="countdown">4:32:15</div>
+<div class="next-label">متبقي حتى أذان الفجر — <span style="font-variant-numeric:tabular-nums">03:53</span></div>
+<div class="sub-info">الليل — العشاء من اليوم السابق</div>
+<div class="date-line">2026-06-01</div>
+</div>
+<div class="today-grid">
+<div class="prayer-cell"><div class="p-name">الفجر</div><div class="p-time">03:53</div></div>
+<div class="prayer-cell"><div class="p-name">الشروق</div><div class="p-time">05:24</div></div>
+<div class="prayer-cell"><div class="p-name">الظهر</div><div class="p-time">12:35</div></div>
+<div class="prayer-cell"><div class="p-name">العصر</div><div class="p-time">16:15</div></div>
+<div class="prayer-cell"><div class="p-name">المغرب</div><div class="p-time">19:44</div></div>
+<div class="prayer-cell active"><div class="p-name">العشاء</div><div class="p-time">21:15</div><span class="p-label">الوقت الحالي</span></div>
+</div>
+<div class="footer-link"><a href="#">المصدر: وزارة الأوقاف الأردنية</a> | عمّان</div>
+</div>
+
+<div class="bottom-nav">
+<button class="active"><svg viewBox="0 0 24 24"><path d="M12 2l1.09 3.26L16 6l-2.91.74L12 10l-1.09-3.26L8 6l2.91-.74L12 2zM12 14l1.09 3.26L16 18l-2.91.74L12 22l-1.09-3.26L8 18l2.91-.74L12 14z"/></svg>اليوم</button>
+<button><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>الشهر</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ════════ VARIANT C: CAIRO ════════ -->
+<div class="variant">
+<div class="variant-label">C — Cairo</div>
+<div class="variant-sub">عناوين: Cairo 800 · أرقام: IBM Plex Sans Arabic</div>
+<div class="theme-btns" data-target="vc">
+<button class="active" data-theme="night">ليل</button>
+<button data-theme="dawn">فجر</button>
+<button data-theme="morning">صباح</button>
+<button data-theme="midday">ظهر</button>
+<button data-theme="afternoon">عصر</button>
+<button data-theme="maghrib">مغرب</button>
+</div>
+<div class="phone-wrap">
+<div class="themed t-night" id="vc" style="font-family:'Cairo','IBM Plex Sans Arabic',sans-serif">
+<style>#vc,#vc *{font-family:'Cairo','IBM Plex Sans Arabic',sans-serif}</style>
+<div class="sky-overlay"></div>
+<div class="stars-layer show"><svg viewBox="0 0 400 300" style="width:100%;height:100%"><circle cx="23" cy="18" r=".6" fill="white" opacity=".5"/><circle cx="67" cy="42" r=".9" fill="white" opacity=".7"/><circle cx="112" cy="15" r=".4" fill="white" opacity=".35"/><circle cx="155" cy="55" r="1.1" fill="white" opacity=".8"/><circle cx="198" cy="28" r=".5" fill="white" opacity=".4"/><circle cx="243" cy="72" r=".7" fill="white" opacity=".55"/><circle cx="287" cy="12" r=".8" fill="white" opacity=".65"/><circle cx="332" cy="48" r=".3" fill="white" opacity=".3"/><circle cx="370" cy="22" r=".9" fill="white" opacity=".6"/><circle cx="45" cy="88" r=".4" fill="white" opacity=".4"/><circle cx="89" cy="95" r="1" fill="white" opacity=".75"/><circle cx="134" cy="110" r=".5" fill="white" opacity=".45"/><circle cx="178" cy="80" r=".8" fill="white" opacity=".55"/><circle cx="223" cy="105" r=".6" fill="white" opacity=".5"/><circle cx="267" cy="92" r="1.2" fill="white" opacity=".85"/><circle cx="312" cy="78" r=".4" fill="white" opacity=".35"/><circle cx="356" cy="115" r=".7" fill="white" opacity=".6"/><circle cx="38" cy="145" r=".5" fill="white" opacity=".4"/><circle cx="82" cy="160" r=".9" fill="white" opacity=".7"/><circle cx="127" cy="138" r=".3" fill="white" opacity=".25"/><circle cx="171" cy="172" r="1" fill="white" opacity=".8"/><circle cx="216" cy="155" r=".6" fill="white" opacity=".5"/><circle cx="260" cy="180" r=".8" fill="white" opacity=".65"/><circle cx="305" cy="148" r=".4" fill="white" opacity=".3"/><circle cx="349" cy="168" r=".7" fill="white" opacity=".55"/><circle cx="15" cy="210" r=".5" fill="white" opacity=".4"/><circle cx="58" cy="228" r=".9" fill="white" opacity=".75"/><circle cx="103" cy="195" r=".6" fill="white" opacity=".5"/><circle cx="148" cy="240" r="1.1" fill="white" opacity=".85"/><circle cx="193" cy="215" r=".4" fill="white" opacity=".35"/><circle cx="238" cy="255" r=".7" fill="white" opacity=".6"/><circle cx="282" cy="202" r=".8" fill="white" opacity=".55"/><circle cx="327" cy="235" r=".5" fill="white" opacity=".4"/><circle cx="371" cy="270" r=".9" fill="white" opacity=".7"/><circle cx="55" cy="195" r=".6" fill="white" opacity=".5"/><circle cx="165" cy="260" r=".8" fill="white" opacity=".65"/></svg></div>
+<div class="moon-layer show"><svg class="moon-svg" viewBox="0 0 100 100" fill="none"><path d="M60 10C35 10 15 30 15 55C15 80 35 95 60 95C45 85 38 70 38 55C38 40 45 20 60 10Z" fill="rgba(255,255,255,.85)"/></svg></div>
+<div class="sun-layer"></div>
+
+<div class="content">
+<div class="header-bar"><h1>مواقيت الصلاة</h1></div>
+<div class="hero">
+<div class="current-name">العشاء</div>
+<div class="countdown">4:32:15</div>
+<div class="next-label">متبقي حتى أذان الفجر — <span style="font-variant-numeric:tabular-nums">03:53</span></div>
+<div class="sub-info">الليل — العشاء من اليوم السابق</div>
+<div class="date-line">2026-06-01</div>
+</div>
+<div class="today-grid">
+<div class="prayer-cell"><div class="p-name">الفجر</div><div class="p-time">03:53</div></div>
+<div class="prayer-cell"><div class="p-name">الشروق</div><div class="p-time">05:24</div></div>
+<div class="prayer-cell"><div class="p-name">الظهر</div><div class="p-time">12:35</div></div>
+<div class="prayer-cell"><div class="p-name">العصر</div><div class="p-time">16:15</div></div>
+<div class="prayer-cell"><div class="p-name">المغرب</div><div class="p-time">19:44</div></div>
+<div class="prayer-cell active"><div class="p-name">العشاء</div><div class="p-time">21:15</div><span class="p-label">الوقت الحالي</span></div>
+</div>
+<div class="footer-link"><a href="#">المصدر: وزارة الأوقاف الأردنية</a> | عمّان</div>
+</div>
+
+<div class="bottom-nav">
+<button class="active"><svg viewBox="0 0 24 24"><path d="M12 2l1.09 3.26L16 6l-2.91.74L12 10l-1.09-3.26L8 6l2.91-.74L12 2zM12 14l1.09 3.26L16 18l-2.91.74L12 22l-1.09-3.26L8 18l2.91-.74L12 14z"/></svg>اليوم</button>
+<button><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>الشهر</button>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+
+<script>
+const themeEffects = {
+  night:    { stars:true,  moon:true,  sun:false },
+  dawn:     { stars:true,  moon:false, sun:false },
+  morning:  { stars:false, moon:false, sun:true  },
+  midday:   { stars:false, moon:false, sun:true  },
+  afternoon:{ stars:false, moon:false, sun:true  },
+  maghrib:  { stars:false, moon:false, sun:false },
+};
+
+document.querySelectorAll('.theme-btns').forEach(btnGroup => {
+  const targetId = btnGroup.dataset.target;
+  const el = document.getElementById(targetId);
+  if (!el) return;
+
+  btnGroup.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btnGroup.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const theme = btn.dataset.theme;
+      el.className = 'themed t-' + theme;
+
+      const cfg = themeEffects[theme] || themeEffects.night;
+      el.querySelector('.stars-layer').classList.toggle('show', cfg.stars);
+      el.querySelector('.moon-layer').classList.toggle('show', cfg.moon);
+      el.querySelector('.sun-layer').classList.toggle('show', cfg.sun);
+    });
+  });
+});
+</script>
+</body>
+</html>
