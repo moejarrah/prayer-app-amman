@@ -421,50 +421,35 @@ function getDayTimes(dateStr) {
   return PRAYER_MAP[dateStr] || null;
 }
 
-function getActiveDate() {
-  const now = new Date();
-  const today = now.toISOString().slice(0,10);
-  const todayTimes = getDayTimes(today);
-  if (!todayTimes) return today;
-
-  const t = now.getHours() * 60 + now.getMinutes();
-  const fajrMins = timeToMinutes(todayTimes.fajr);
-
-  // Before today's Fajr: still in yesterday's schedule (isha period)
-  if (t < fajrMins) {
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    return yesterday.toISOString().slice(0,10);
-  }
-  return today;
-}
-
 // ═══════════════ THEME ═══════════════
 
-function getCurrentAndNextPrayer(times) {
-  if (!times) return { current: '...', next: '...', nextTime: '...', secondsLeft: 0, currentName: '...', currentPeriod: 'night' };
+function getCurrentAndNextPrayer(times, dayOffset) {
+  // dayOffset: 0 for today, 1 for tomorrow (prayer times need 24h added to be relative to now)
+  if (!times) return { current: '...', next: '...', nextTime: '...', secondsLeft: 0, currentName: '...', currentPeriod: 'night', isBeforeFajr: false };
 
   const now = new Date();
   const t = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
   const DAY = 24 * 3600;
+  const offset = (dayOffset || 0) * DAY;
 
   const prayers = PRAYER_KEYS.map((key, i) => {
     const mins = timeToMinutes(times[key] || '00:00');
-    return { key, name: PRAYER_NAMES[i], timeSecs: mins * 60, timeStr: times[key] || '...' };
+    return { key, name: PRAYER_NAMES[i], timeSecs: mins * 60 + offset, timeStr: times[key] || '...' };
   });
 
   const names = {};
   PRAYER_KEYS.forEach((k, i) => { names[k] = PRAYER_NAMES[i]; });
 
-  // After isha: next fajr is tomorrow
+  // After isha (relative to now): next fajr is tomorrow
   if (t >= prayers[5].timeSecs) {
     return {
       current: 'العشاء',
       currentName: 'العشاء',
       next: 'الفجر',
       nextTime: prayers[0].timeStr,
-      secondsLeft: (DAY - t) + prayers[0].timeSecs,
-      currentPeriod: 'night'
+      secondsLeft: (DAY - t) + prayers[0].timeSecs + offset,
+      currentPeriod: 'night',
+      isBeforeFajr: false
     };
   }
 
@@ -476,19 +461,21 @@ function getCurrentAndNextPrayer(times) {
         next: prayers[i+1].name,
         nextTime: prayers[i+1].timeStr,
         secondsLeft: prayers[i+1].timeSecs - t,
-        currentPeriod: PRAYER_PERIODS[i]
+        currentPeriod: PRAYER_PERIODS[i],
+        isBeforeFajr: false
       };
     }
   }
 
-  // Before fajr (same day)
+  // Before fajr
   return {
     current: 'العشاء',
     currentName: 'العشاء',
     next: 'الفجر',
     nextTime: prayers[0].timeStr,
     secondsLeft: prayers[0].timeSecs - t,
-    currentPeriod: 'night'
+    currentPeriod: 'night',
+    isBeforeFajr: true
   };
 }
 
@@ -530,12 +517,34 @@ function applyTheme(period) {
   document.querySelector('.moon-icon').classList.toggle('show', showMoon);
 }
 
+function getActiveDate() {
+  const now = new Date();
+  const today = now.toISOString().slice(0,10);
+  const todayTimes = getDayTimes(today);
+  if (!todayTimes) return today;
+
+  const t = now.getHours() * 60 + now.getMinutes();
+  const ishaMins = timeToMinutes(todayTimes.isha);
+
+  // After today's Isha: all prayers done, flip to tomorrow
+  if (t >= ishaMins) {
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().slice(0,10);
+    // Only flip if we have tomorrow's data
+    if (getDayTimes(tomorrowStr)) return tomorrowStr;
+  }
+  return today;
+}
+
 // ═══════════════ RENDER TODAY ═══════════════
 
 function renderToday() {
   const activeDate = getActiveDate();
   const times = getDayTimes(activeDate);
-  const info = getCurrentAndNextPrayer(times);
+  const today = new Date().toISOString().slice(0,10);
+  const isNextDay = activeDate !== today;
+  const info = getCurrentAndNextPrayer(times, isNextDay ? 1 : 0);
 
   applyTheme(info.currentPeriod || 'night');
 
@@ -546,7 +555,12 @@ function renderToday() {
     html += `<div class="current-name">${info.currentName || '...'}</div>`;
     html += `<div class="countdown" id="countdown">${formatCountdown(info.secondsLeft)}</div>`;
     html += `<div class="next-label">متبقي حتى أذان ${info.next} — ${info.nextTime}</div>`;
-    html += `<div class="hijri-date" style="margin-top:10px;">${activeDate}</div>`;
+    if (isNextDay) {
+      html += `<div class="hijri-date" style="margin-top:8px;color:var(--accent);">بعد أذان العشاء — مواقيت ${activeDate}</div>`;
+    } else if (info.isBeforeFajr) {
+      html += `<div class="hijri-date" style="margin-top:8px;color:var(--accent);">الليل — العشاء من اليوم السابق</div>`;
+    }
+    html += `<div class="hijri-date" style="margin-top:${(isNextDay||info.isBeforeFajr)?'4px':'10px'};">${activeDate}</div>`;
   } else {
     html += `<div class="current-name">...</div>`;
     html += `<div class="countdown">--:--</div>`;
@@ -557,7 +571,8 @@ function renderToday() {
   if (times) {
     html += `<div class="today-grid">`;
     PRAYER_KEYS.forEach((key, i) => {
-      const isActive = info.currentName === PRAYER_NAMES[i];
+      // Don't highlight when viewing next day's schedule (no prayer is currently active from tomorrow)
+      const isActive = !isNextDay && !info.isBeforeFajr && info.currentName === PRAYER_NAMES[i];
       html += `
         <div class="prayer-cell ${isActive?'active':''}">
           <div class="p-name">${PRAYER_NAMES[i]}</div>
@@ -705,11 +720,12 @@ function updateCountdownOnly() {
   const times = getDayTimes(activeDate);
   if (!times) return;
 
-  const info = getCurrentAndNextPrayer(times);
+  const today = new Date().toISOString().slice(0,10);
+  const isNextDay = activeDate !== today;
+  const info = getCurrentAndNextPrayer(times, isNextDay ? 1 : 0);
   const cd = document.getElementById('countdown');
   if (cd) cd.textContent = formatCountdown(info.secondsLeft);
 
-  // Re-render when prayer period changes or countdown hits zero
   if (info.currentPeriod !== lastPeriod || info.secondsLeft <= 0) {
     lastPeriod = info.currentPeriod;
     renderToday();
