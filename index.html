@@ -2,14 +2,15 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="مواقيت الصلاة"/>
   <meta name="theme-color" content="#1a1a2e"/>
   <title>مواقيت الصلاة</title>
   <link rel="manifest" href="manifest.json"/>
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231a1a2e' width='100' height='100' rx='22'/><path d='M50 15 L56 28 L70 28 L60 38 L64 52 L50 44 L36 52 L40 38 L30 28 L44 28Z' fill='%23e8b860'/><rect x='38' y='55' width='24' height='28' rx='3' fill='%23e8b860'/><path d='M35 83 Q50 76 65 83 L65 85 L35 85Z' fill='%23e8b860'/></svg>"/>
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png"/>
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
   <script src="prayers-data.js"></script>
 
   <style>
@@ -155,7 +156,8 @@
 
     .header {
       position:relative; z-index:2;
-      padding:16px 16px 10px; text-align:center;
+      padding:16px 16px 10px; padding-top:calc(16px + env(safe-area-inset-top));
+      text-align:center;
       display:flex;align-items:center;justify-content:center; flex-shrink:0;
     }
     .header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
@@ -175,7 +177,7 @@
     }
 
     .main-scroll {
-      flex:1; overflow-y:auto; padding:0 14px 90px;
+      flex:1; overflow-y:auto; padding:0 14px calc(90px + env(safe-area-inset-bottom));
       -webkit-overflow-scrolling:touch; position:relative; z-index:2;
     }
 
@@ -237,7 +239,7 @@
     .bottom-nav {
       position:fixed; bottom:0;left:0;right:0; z-index:10;
       background:var(--countdown-bg); border-top:1px solid var(--surface-strong);
-      display:flex; padding:6px 8px; gap:4px;
+      display:flex; padding:6px 8px; padding-bottom:calc(6px + env(safe-area-inset-bottom)); gap:4px;
       backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
       justify-content:space-around;
     }
@@ -337,9 +339,6 @@
     .refresh-bar a {
       color:inherit; text-decoration:underline;
     }
-      text-align:center; font-size:0.65rem; color:var(--text-dim);
-      padding:8px; opacity:0.6;
-    }
 
     .loading {
       text-align:center; padding:40px; color:var(--text-dim);
@@ -361,7 +360,9 @@
     </button>
   </div>
 
-  <div class="main-scroll" id="mainScroll"></div>
+  <div class="main-scroll" id="mainScroll">
+    <noscript><p style="text-align:center;padding:40px;color:#e8e8f0;">يجب تفعيل JavaScript لتشغيل هذا التطبيق</p></noscript>
+  </div>
 
   <div class="bottom-nav">
     <button onclick="switchTab('today')" id="btnToday" class="active"><span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L14 12 L22 12 L15 18 L18 22 L12 17 L6 22 L9 18 L2 12 L10 12Z"/></svg></span>اليوم</button>
@@ -377,22 +378,15 @@
   </div>
 
 <script>
-const LS = localStorage;
-
-// Prayer data loaded from prayers-data.js (PRAYER_DATA array)
-// Build a lookup map for O(1) date access
 const PRAYER_MAP = {};
 if (typeof PRAYER_DATA !== 'undefined') {
   PRAYER_DATA.forEach(p => {
-    // Normalize PM times to 24h as defense-in-depth
     const normalized = normalizeTimes(p);
     PRAYER_MAP[normalized.date] = normalized;
   });
 }
 
 function normalizeTimes(entry) {
-  // Ensure dhuhr/asr/maghrib/isha are in 24h format
-  // The site sometimes outputs 12h times like "04:15" for Asr
   const pmKeys = ['dhuhr', 'asr', 'maghrib', 'isha'];
   const out = { ...entry };
   pmKeys.forEach(key => {
@@ -400,8 +394,6 @@ function normalizeTimes(entry) {
       const parts = out[key].split(':');
       if (parts.length === 2) {
         let h = parseInt(parts[0], 10);
-        // Dhuhr is always PM (around 12:xx), asr/maghrib/isha always PM
-        // If hour < 12 for these, add 12
         if (h < 12) {
           h += 12;
           out[key] = h + ':' + parts[1];
@@ -410,6 +402,16 @@ function normalizeTimes(entry) {
     }
   });
   return out;
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function localDateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
 const PRAYER_NAMES = ['الفجر', 'الشروق', 'الظهر', 'العصر', 'المغرب', 'العشاء'];
@@ -422,7 +424,34 @@ let refreshTimer = null;
 
 // ═══════════════ INIT ═══════════════
 
+function checkTimezone() {
+  const offset = -new Date().getTimezoneOffset();
+  if (offset !== 180) {
+    const warn = document.createElement('div');
+    warn.style.cssText = 'background:#c44b2b;color:white;text-align:center;padding:8px 12px;font-size:0.75rem;position:relative;z-index:5;';
+    warn.textContent = '⚠️ المنطقة الزمنية ليست توقيت الأردن (UTC+3). المواقيت قد تكون غير دقيقة.';
+    document.body.prepend(warn);
+  }
+  const lastDate = PRAYER_DATA && PRAYER_DATA.length ? PRAYER_DATA[PRAYER_DATA.length - 1].date : '';
+  if (lastDate) {
+    const now = new Date();
+    const daysLeft = Math.ceil((new Date(lastDate + 'T23:59:59') - now) / 86400000);
+    if (daysLeft <= 30 && daysLeft > 0) {
+      const warn = document.createElement('div');
+      warn.style.cssText = 'background:#b8860b;color:white;text-align:center;padding:8px 12px;font-size:0.75rem;position:relative;z-index:5;';
+      warn.textContent = `⚠️ البيانات صالحة حتى ${lastDate} (${daysLeft} يوم متبقي). يرجى التحديث.`;
+      document.body.prepend(warn);
+    } else if (daysLeft <= 0) {
+      const warn = document.createElement('div');
+      warn.style.cssText = 'background:#c44b2b;color:white;text-align:center;padding:8px 12px;font-size:0.75rem;position:relative;z-index:5;';
+      warn.textContent = '⚠️ بيانات المواقيت منتهية الصلاحية. يرجى تحديث التطبيق.';
+      document.body.prepend(warn);
+    }
+  }
+}
+
 function init() {
+  checkTimezone();
   const now = new Date();
   calYear = now.getFullYear();
   calMonth = now.getMonth();
@@ -442,7 +471,7 @@ function getDayTimes(dateStr) {
 
 function getCurrentAndNextPrayer(times, dayOffset) {
   // dayOffset: 0 for today, 1 for tomorrow (prayer times need 24h added to be relative to now)
-  if (!times) return { current: '...', next: '...', nextTime: '...', secondsLeft: 0, currentName: '...', currentPeriod: 'night', isBeforeFajr: false };
+  if (!times) return { current: '...', next: '...', nextTime: '...', secondsLeft: 0, currentName: '...', currentPeriod: 'night', isBeforeFajr: false, isAfterIsha: false };
 
   const now = new Date();
   const t = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
@@ -466,7 +495,8 @@ function getCurrentAndNextPrayer(times, dayOffset) {
       nextTime: prayers[0].timeStr,
       secondsLeft: (DAY - t) + prayers[0].timeSecs + offset,
       currentPeriod: 'night',
-      isBeforeFajr: false
+      isBeforeFajr: false,
+      isAfterIsha: true
     };
   }
 
@@ -479,7 +509,8 @@ function getCurrentAndNextPrayer(times, dayOffset) {
         nextTime: prayers[i+1].timeStr,
         secondsLeft: prayers[i+1].timeSecs - t,
         currentPeriod: PRAYER_PERIODS[i],
-        isBeforeFajr: false
+        isBeforeFajr: false,
+        isAfterIsha: false
       };
     }
   }
@@ -492,7 +523,8 @@ function getCurrentAndNextPrayer(times, dayOffset) {
     nextTime: prayers[0].timeStr,
     secondsLeft: prayers[0].timeSecs - t,
     currentPeriod: 'night',
-    isBeforeFajr: true
+    isBeforeFajr: true,
+    isAfterIsha: false
   };
 }
 
@@ -536,19 +568,17 @@ function applyTheme(period) {
 
 function getActiveDate() {
   const now = new Date();
-  const today = now.toISOString().slice(0,10);
+  const today = localDateStr(now);
   const todayTimes = getDayTimes(today);
   if (!todayTimes) return today;
 
   const t = now.getHours() * 60 + now.getMinutes();
   const ishaMins = timeToMinutes(todayTimes.isha);
 
-  // After today's Isha: all prayers done, flip to tomorrow
   if (t >= ishaMins) {
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().slice(0,10);
-    // Only flip if we have tomorrow's data
+    const tomorrowStr = localDateStr(tomorrow);
     if (getDayTimes(tomorrowStr)) return tomorrowStr;
   }
   return today;
@@ -559,7 +589,7 @@ function getActiveDate() {
 function renderToday() {
   const activeDate = getActiveDate();
   const times = getDayTimes(activeDate);
-  const today = new Date().toISOString().slice(0,10);
+  const today = localDateStr(new Date());
   const isNextDay = activeDate !== today;
   const info = getCurrentAndNextPrayer(times, isNextDay ? 1 : 0);
 
@@ -571,13 +601,15 @@ function renderToday() {
   if (times) {
     html += `<div class="current-name">${info.currentName || '...'}</div>`;
     html += `<div class="countdown" id="countdown">${formatCountdown(info.secondsLeft)}</div>`;
-    html += `<div class="next-label">متبقي حتى أذان ${info.next} — ${info.nextTime}</div>`;
+    html += `<div class="next-label">متبقي حتى أذان ${info.next} — ${esc(info.nextTime)}</div>`;
     if (isNextDay) {
-      html += `<div class="hijri-date" style="margin-top:8px;color:var(--accent);">بعد أذان العشاء — مواقيت ${activeDate}</div>`;
+      html += `<div class="hijri-date" style="margin-top:8px;color:var(--accent);">بعد أذان العشاء — مواقيت ${esc(activeDate)}</div>`;
+    } else if (info.isAfterIsha) {
+      html += `<div class="hijri-date" style="margin-top:8px;color:var(--accent);">بعد أذان العشاء</div>`;
     } else if (info.isBeforeFajr) {
       html += `<div class="hijri-date" style="margin-top:8px;color:var(--accent);">الليل — العشاء من اليوم السابق</div>`;
     }
-    html += `<div class="hijri-date" style="margin-top:${(isNextDay||info.isBeforeFajr)?'4px':'10px'};">${activeDate}</div>`;
+    html += `<div class="hijri-date" style="margin-top:${(isNextDay||info.isAfterIsha||info.isBeforeFajr)?'4px':'10px'};">${esc(activeDate)}</div>`;
   } else {
     html += `<div class="current-name">...</div>`;
     html += `<div class="countdown">--:--</div>`;
@@ -593,7 +625,7 @@ function renderToday() {
       html += `
         <div class="prayer-cell ${isActive?'active':''}">
           <div class="p-name">${PRAYER_NAMES[i]}</div>
-          <div class="p-time">${times[key] || '...'}</div>
+          <div class="p-time">${times[key] ? esc(times[key]) : '...'}</div>
           ${isActive?`<span class="p-label">الوقت الحالي</span>`:''}
         </div>`;
     });
@@ -614,13 +646,13 @@ function renderMonth() {
   if (!calYear) { calYear = now.getFullYear(); calMonth = now.getMonth(); }
 
   const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-  const dows = ['أحد','إثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
-  const todayStr = now.toISOString().slice(0,10);
+  const dows = ['سبت','أحد','إثنين','ثلاثاء','أربعاء','خميس','جمعة'];
+  const todayStr = localDateStr(now);
 
   const firstDay = new Date(calYear, calMonth, 1);
   const lastDay = new Date(calYear, calMonth+1, 0);
   const daysInMonth = lastDay.getDate();
-  let startDow = firstDay.getDay();
+  let startDow = (firstDay.getDay() + 1) % 7;
 
   let html = '';
 
@@ -648,7 +680,7 @@ function renderMonth() {
 
     html += `<div class="${cls.join(' ')}" onclick="${dayTimes?`showDayDetail('${key}')`:''}">
       <span>${d}</span>
-      ${fajrTime ? `<span class="cal-fajr">فجر ${fajrTime}</span>` : ''}
+      ${fajrTime ? `<span class="cal-fajr">فجر ${esc(fajrTime)}</span>` : ''}
     </div>`;
   }
   html += `</div>`;
@@ -685,10 +717,10 @@ function showDayDetail(dateStr) {
     <span></span>
   </div>`;
   html += `<div class="today-grid">`;
-  p.forEach(p => {
+  p.forEach(item => {
     html += `<div class="prayer-cell">
-      <div class="p-name">${p.name}</div>
-      <div class="p-time">${p.time}</div>
+      <div class="p-name">${item.name}</div>
+      <div class="p-time">${item.time ? esc(item.time) : '...'}</div>
     </div>`;
   });
   html += `</div>`;
@@ -730,9 +762,10 @@ async function shareApp() {
     try {
       await navigator.share({ title, text, url });
       return;
-    } catch(e) {}
+    } catch(e) {
+      if (e.name === 'AbortError') return;
+    }
   }
-  // Fallback: copy link
   try {
     await navigator.clipboard.writeText(url);
     alert('تم نسخ الرابط! أرسله لأصدقائك.');
@@ -757,7 +790,7 @@ function updateCountdownOnly() {
   const times = getDayTimes(activeDate);
   if (!times) return;
 
-  const today = new Date().toISOString().slice(0,10);
+  const today = localDateStr(new Date());
   const isNextDay = activeDate !== today;
   const info = getCurrentAndNextPrayer(times, isNextDay ? 1 : 0);
   const cd = document.getElementById('countdown');

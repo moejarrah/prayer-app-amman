@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>مواقيت الصلاة - معاينة الثيمات</title>
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#111; color:#fff; padding:20px; }
+
+    h1 { text-align:center; font-size:1.4rem; margin-bottom:24px; color:#e8e8f0; }
+    .hint { text-align:center; font-size:0.85rem; color:#8892a4; margin-bottom:32px; }
+
+    .theme-card {
+      border-radius:20px; overflow:hidden; margin-bottom:28px;
+      position:relative;
+    }
+    .theme-card .sky {
+      position:relative; padding:28px 20px 20px; min-height:320px;
+      display:flex; flex-direction:column; justify-content:flex-end;
+    }
+    .theme-card .label-tag {
+      position:absolute; top:12px; right:14px;
+      font-size:0.65rem; font-weight:700; padding:4px 10px;
+      border-radius:10px; background:rgba(255,255,255,0.15);
+      color:rgba(255,255,255,0.8); backdrop-filter:blur(4px);
+    }
+
+    /* exact copies of theme CSS vars */
+    .t-night .sky {
+      background:linear-gradient(180deg, #0a0a1a 0%, #111130 55%, #1a1a3e 100%);
+      color:#e8e8f0;
+    }
+    .t-night .accent { color:#c8c0e0; }
+    .t-night .prayer-active { background:rgba(200,192,224,0.12); border-color:rgba(200,192,224,0.3); box-shadow:0 0 20px rgba(200,192,224,0.3); }
+
+    .t-dawn .sky {
+      background:linear-gradient(180deg, #1a1a3e 0%, #2d1b69 55%, #c44b2b 100%);
+      color:#e8e8f0;
+    }
+    .t-dawn .accent { color:#e8965e; }
+    .t-dawn .prayer-active { background:rgba(232,150,94,0.15); border-color:rgba(232,150,94,0.4); box-shadow:0 0 20px rgba(232,150,94,0.4); }
+
+    .t-morning .sky {
+      background:linear-gradient(180deg, #4a90d9 0%, #87ceeb 55%, #ffe4b5 100%);
+      color:#2d3436;
+    }
+    .t-morning .accent { color:#f0a050; }
+    .t-morning .prayer-active { background:rgba(240,160,80,0.15); border-color:rgba(240,160,80,0.4); box-shadow:0 0 20px rgba(240,160,80,0.4); }
+
+    .t-midday .sky {
+      background:linear-gradient(180deg, #5b9bd5 0%, #87ceeb 55%, #e8d5b7 100%);
+      color:#2d3436;
+    }
+    .t-midday .accent { color:#e8a040; }
+    .t-midday .prayer-active { background:rgba(232,160,64,0.15); border-color:rgba(232,160,64,0.4); box-shadow:0 0 20px rgba(232,160,64,0.35); }
+
+    .t-afternoon .sky {
+      background:linear-gradient(180deg, #d4a54a 0%, #e8c56a 55%, #f5d580 100%);
+      color:#3d3020;
+    }
+    .t-afternoon .accent { color:#c8862e; }
+    .t-afternoon .prayer-active { background:rgba(200,134,46,0.2); border-color:rgba(200,134,46,0.5); box-shadow:0 0 20px rgba(200,134,46,0.4); }
+
+    .t-maghrib .sky {
+      background:linear-gradient(180deg, #2c1654 0%, #6b2440 55%, #e8743c 100%);
+      color:#e8e8f0;
+    }
+    .t-maghrib .accent { color:#f08050; }
+    .t-maghrib .prayer-active { background:rgba(240,128,80,0.15); border-color:rgba(240,128,80,0.4); box-shadow:0 0 20px rgba(240,128,80,0.45); }
+
+    .hero-name { font-size:2rem; font-weight:800; letter-spacing:1px; margin-bottom:4px; }
+    .hero-name.glow { text-shadow:0 2px 20px currentColor; }
+    .countdown-box {
+      display:inline-block; font-size:1.4rem; font-weight:700;
+      padding:10px 24px; border-radius:16px; margin-top:8px;
+      backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    }
+    .t-night .countdown-box, .t-dawn .countdown-box, .t-maghrib .countdown-box { background:rgba(0,0,0,0.35); color:#e8e8f0; }
+    .t-morning .countdown-box, .t-midday .countdown-box { background:rgba(255,255,255,0.6); color:#2d3436; }
+    .t-afternoon .countdown-box { background:rgba(255,255,255,0.6); color:#3d3020; }
+
+    .next-label { font-size:0.72rem; margin-top:6px; color:inherit; opacity:0.6; }
+
+    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:16px; }
+    .cell {
+      border-radius:14px; padding:12px 8px; text-align:center;
+      backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+    }
+    .t-night .cell, .t-dawn .cell, .t-maghrib .cell { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color:#e8e8f0; }
+    .t-morning .cell, .t-midday .cell { background:rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.08); color:#2d3436; }
+    .t-afternoon .cell { background:rgba(0,0,0,0.04); border:1px solid rgba(0,0,0,0.1); color:#3d3020; }
+
+    .cell-name { font-size:0.7rem; opacity:0.55; margin-bottom:4px; }
+    .cell-time { font-size:1.2rem; font-weight:700; }
+    .cell.active.prayer-active { transform:scale(1.03); }
+    .cell-active-tag { font-size:0.58rem; font-weight:600; margin-top:2px; }
+
+    .stars-svg {
+      position:absolute; top:0; left:0; width:100%; height:60%;
+      pointer-events:none; opacity:0.7;
+    }
+    .sun-glow-vis {
+      position:absolute; top:5%; left:50%; transform:translateX(-50%);
+      width:100px; height:100px; border-radius:50%; pointer-events:none;
+      background:radial-gradient(circle, rgba(255,220,100,0.7) 0%, rgba(255,180,50,0.3) 40%, transparent 70%);
+    }
+    .moon-vis {
+      position:absolute; top:6%; right:12%; font-size:2.5rem; opacity:0.7;
+    }
+  </style>
+</head>
+<body>
+
+<h1>معاينة الثيمات الستة</h1>
+<p class="hint">كل ثيم يظهر حسب الفترة الزمنية بين صلاتين</p>
+
+<!-- NIGHT: Isha → Fajr -->
+<div class="theme-card t-night">
+  <div class="sky">
+    <div class="label-tag">الليل — بعد العشاء حتى الفجر</div>
+    <svg class="stars-svg" viewBox="0 0 400 200"><circle cx="50" cy="30" r="1" fill="white" opacity="0.8"/><circle cx="120" cy="60" r="0.8" fill="white" opacity="0.5"/><circle cx="200" cy="20" r="1.2" fill="white" opacity="0.9"/><circle cx="280" cy="50" r="0.6" fill="white" opacity="0.6"/><circle cx="340" cy="25" r="1" fill="white" opacity="0.7"/><circle cx="80" cy="90" r="0.5" fill="white" opacity="0.4"/><circle cx="170" cy="70" r="0.9" fill="white" opacity="0.8"/><circle cx="300" cy="80" r="1.1" fill="white" opacity="0.6"/><circle cx="250" cy="40" r="0.7" fill="white" opacity="0.5"/><circle cx="360" cy="95" r="0.8" fill="white" opacity="0.7"/></svg>
+    <div class="moon-vis">🌙</div>
+    <div class="hero-name glow accent">العشاء</div>
+    <div class="countdown-box">4:32:15</div>
+    <div class="next-label">متبقي حتى أذان الفجر — 03:53</div>
+    <div class="grid">
+      <div class="cell"><div class="cell-name">الفجر</div><div class="cell-time">03:53</div></div>
+      <div class="cell"><div class="cell-name">الشروق</div><div class="cell-time">05:24</div></div>
+      <div class="cell"><div class="cell-name">الظهر</div><div class="cell-time">12:35</div></div>
+      <div class="cell active prayer-active"><div class="cell-name">العصر</div><div class="cell-time">16:15</div><div class="cell-active-tag accent">الوقت الحالي</div></div>
+      <div class="cell"><div class="cell-name">المغرب</div><div class="cell-time">19:44</div></div>
+      <div class="cell active prayer-active"><div class="cell-name">العشاء</div><div class="cell-time">21:15</div><div class="cell-active-tag accent">الوقت الحالي</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- DAWN: Fajr → Shuruq -->
+<div class="theme-card t-dawn">
+  <div class="sky">
+    <div class="label-tag">الفجر — من الفجر حتى الشروق</div>
+    <svg class="stars-svg" viewBox="0 0 400 200"><circle cx="50" cy="30" r="1" fill="white" opacity="0.5"/><circle cx="150" cy="50" r="0.8" fill="white" opacity="0.3"/><circle cx="250" cy="20" r="1.2" fill="white" opacity="0.6"/><circle cx="330" cy="60" r="0.6" fill="white" opacity="0.4"/><circle cx="100" cy="80" r="0.7" fill="white" opacity="0.3"/></svg>
+    <div class="hero-name glow accent">الفجر</div>
+    <div class="countdown-box">1:28:44</div>
+    <div class="next-label">متبقي حتى أذان الشروق — 05:24</div>
+    <div class="grid">
+      <div class="cell active prayer-active"><div class="cell-name">الفجر</div><div class="cell-time">03:53</div><div class="cell-active-tag accent">الوقت الحالي</div></div>
+      <div class="cell"><div class="cell-name">الشروق</div><div class="cell-time">05:24</div></div>
+      <div class="cell"><div class="cell-name">الظهر</div><div class="cell-time">12:35</div></div>
+      <div class="cell"><div class="cell-name">العصر</div><div class="cell-time">16:15</div></div>
+      <div class="cell"><div class="cell-name">المغرب</div><div class="cell-time">19:44</div></div>
+      <div class="cell"><div class="cell-name">العشاء</div><div class="cell-time">21:15</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MORNING: Shuruq → Dhuhr -->
+<div class="theme-card t-morning">
+  <div class="sky">
+    <div class="label-tag">الصباح — من الشروق حتى الظهر</div>
+    <div class="sun-glow-vis"></div>
+    <div class="hero-name glow accent">الشروق</div>
+    <div class="countdown-box">6:34:22</div>
+    <div class="next-label">متبقي حتى أذان الظهر — 12:35</div>
+    <div class="grid">
+      <div class="cell"><div class="cell-name">الفجر</div><div class="cell-time">03:53</div></div>
+      <div class="cell active prayer-active"><div class="cell-name">الشروق</div><div class="cell-time">05:24</div><div class="cell-active-tag accent">الوقت الحالي</div></div>
+      <div class="cell"><div class="cell-name">الظهر</div><div class="cell-time">12:35</div></div>
+      <div class="cell"><div class="cell-name">العصر</div><div class="cell-time">16:15</div></div>
+      <div class="cell"><div class="cell-name">المغرب</div><div class="cell-time">19:44</div></div>
+      <div class="cell"><div class="cell-name">العشاء</div><div class="cell-time">21:15</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MIDDAY: Dhuhr → Asr -->
+<div class="theme-card t-midday">
+  <div class="sky">
+    <div class="label-tag">الظهيرة — من الظهر حتى العصر</div>
+    <div class="sun-glow-vis"></div>
+    <div class="hero-name glow accent">الظهر</div>
+    <div class="countdown-box">3:40:00</div>
+    <div class="next-label">متبقي حتى أذان العصر — 16:15</div>
+    <div class="grid">
+      <div class="cell"><div class="cell-name">الفجر</div><div class="cell-time">03:53</div></div>
+      <div class="cell"><div class="cell-name">الشروق</div><div class="cell-time">05:24</div></div>
+      <div class="cell active prayer-active"><div class="cell-name">الظهر</div><div class="cell-time">12:35</div><div class="cell-active-tag accent">الوقت الحالي</div></div>
+      <div class="cell"><div class="cell-name">العصر</div><div class="cell-time">16:15</div></div>
+      <div class="cell"><div class="cell-name">المغرب</div><div class="cell-time">19:44</div></div>
+      <div class="cell"><div class="cell-name">العشاء</div><div class="cell-time">21:15</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- AFTERNOON: Asr → Maghrib -->
+<div class="theme-card t-afternoon">
+  <div class="sky">
+    <div class="label-tag">العصر — من العصر حتى المغرب</div>
+    <div class="sun-glow-vis"></div>
+    <div class="hero-name glow accent">العصر</div>
+    <div class="countdown-box">3:29:15</div>
+    <div class="next-label">متبقي حتى أذان المغرب — 19:44</div>
+    <div class="grid">
+      <div class="cell"><div class="cell-name">الفجر</div><div class="cell-time">03:53</div></div>
+      <div class="cell"><div class="cell-name">الشروق</div><div class="cell-time">05:24</div></div>
+      <div class="cell"><div class="cell-name">الظهر</div><div class="cell-time">12:35</div></div>
+      <div class="cell active prayer-active"><div class="cell-name">العصر</div><div class="cell-time">16:15</div><div class="cell-active-tag accent">الوقت الحالي</div></div>
+      <div class="cell"><div class="cell-name">المغرب</div><div class="cell-time">19:44</div></div>
+      <div class="cell"><div class="cell-name">العشاء</div><div class="cell-time">21:15</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAGHRIB: Maghrib → Isha -->
+<div class="theme-card t-maghrib">
+  <div class="sky">
+    <div class="label-tag">المغرب — من المغرب حتى العشاء</div>
+    <div class="hero-name glow accent">المغرب</div>
+    <div class="countdown-box">1:31:00</div>
+    <div class="next-label">متبقي حتى أذان العشاء — 21:15</div>
+    <div class="grid">
+      <div class="cell"><div class="cell-name">الفجر</div><div class="cell-time">03:53</div></div>
+      <div class="cell"><div class="cell-name">الشروق</div><div class="cell-time">05:24</div></div>
+      <div class="cell"><div class="cell-name">الظهر</div><div class="cell-time">12:35</div></div>
+      <div class="cell"><div class="cell-name">العصر</div><div class="cell-time">16:15</div></div>
+      <div class="cell active prayer-active"><div class="cell-name">المغرب</div><div class="cell-time">19:44</div><div class="cell-active-tag accent">الوقت الحالي</div></div>
+      <div class="cell"><div class="cell-name">العشاء</div><div class="cell-time">21:15</div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
