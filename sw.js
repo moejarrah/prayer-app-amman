@@ -1,5 +1,5 @@
-const CACHE = "prayer-times-v2";
-const FILES = ["/", "/index.html", "/sw.js", "/manifest.json", "/prayers-data.js"];
+const CACHE = "prayer-times-v3";
+const FILES = ["./", "./index.html", "./sw.js", "./manifest.json", "./prayers-data.js"];
 
 self.addEventListener("install", e => {
   self.skipWaiting();
