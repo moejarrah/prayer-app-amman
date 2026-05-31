@@ -394,8 +394,6 @@ function normalizeTimes(entry) {
   });
   return out;
 }
-const SCRAPE_DATE = PRAYER_DATA && PRAYER_DATA.length ? PRAYER_DATA[0].date : '';
-const DATA_COUNT = PRAYER_DATA ? PRAYER_DATA.length : 0;
 
 const PRAYER_NAMES = ['الفجر', 'الشروق', 'الظهر', 'العصر', 'المغرب', 'العشاء'];
 const PRAYER_KEYS = ['fajr', 'shuruq', 'dhuhr', 'asr', 'maghrib', 'isha'];
@@ -423,54 +421,73 @@ function getDayTimes(dateStr) {
   return PRAYER_MAP[dateStr] || null;
 }
 
+function getActiveDate() {
+  const now = new Date();
+  const today = now.toISOString().slice(0,10);
+  const todayTimes = getDayTimes(today);
+  if (!todayTimes) return today;
+
+  const t = now.getHours() * 60 + now.getMinutes();
+  const fajrMins = timeToMinutes(todayTimes.fajr);
+
+  // Before today's Fajr: still in yesterday's schedule (isha period)
+  if (t < fajrMins) {
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday.toISOString().slice(0,10);
+  }
+  return today;
+}
+
 // ═══════════════ THEME ═══════════════
 
 function getCurrentAndNextPrayer(times) {
   if (!times) return { current: '...', next: '...', nextTime: '...', secondsLeft: 0, currentName: '...', currentPeriod: 'night' };
 
   const now = new Date();
-  const t = now.getHours() * 60 + now.getMinutes();
+  const t = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+  const DAY = 24 * 3600;
 
   const prayers = PRAYER_KEYS.map((key, i) => {
     const mins = timeToMinutes(times[key] || '00:00');
-    return { key, name: PRAYER_NAMES[i], time: mins, timeStr: times[key] || '...' };
+    return { key, name: PRAYER_NAMES[i], timeSecs: mins * 60, timeStr: times[key] || '...' };
   });
 
   const names = {};
   PRAYER_KEYS.forEach((k, i) => { names[k] = PRAYER_NAMES[i]; });
 
-  // Handle the night period (after isha, before fajr next day)
-  if (t >= prayers[5].time) {
+  // After isha: next fajr is tomorrow
+  if (t >= prayers[5].timeSecs) {
     return {
       current: 'العشاء',
       currentName: 'العشاء',
       next: 'الفجر',
       nextTime: prayers[0].timeStr,
-      secondsLeft: ((24*60 - t) + prayers[0].time) * 60,
+      secondsLeft: (DAY - t) + prayers[0].timeSecs,
       currentPeriod: 'night'
     };
   }
 
   for (let i = 0; i < prayers.length - 1; i++) {
-    if (t >= prayers[i].time && t < prayers[i+1].time) {
+    if (t >= prayers[i].timeSecs && t < prayers[i+1].timeSecs) {
       return {
         current: names[prayers[i].key],
         currentName: names[prayers[i].key],
         next: prayers[i+1].name,
         nextTime: prayers[i+1].timeStr,
-        secondsLeft: (prayers[i+1].time - t) * 60,
+        secondsLeft: prayers[i+1].timeSecs - t,
         currentPeriod: PRAYER_PERIODS[i]
       };
     }
   }
 
-  // Before fajr (same day — fajr hasn't happened yet today)
+  // Before fajr (same day)
   return {
     current: 'العشاء',
     currentName: 'العشاء',
     next: 'الفجر',
     nextTime: prayers[0].timeStr,
-    secondsLeft: (prayers[0].time - t) * 60,
+    secondsLeft: prayers[0].timeSecs - t,
     currentPeriod: 'night'
   };
 }
@@ -481,7 +498,7 @@ function timeToMinutes(timeStr) {
 }
 
 function formatCountdown(seconds) {
-  seconds = Math.max(0, Math.floor(seconds));
+  seconds = Math.max(0, Math.round(seconds));
   if (seconds <= 0) return 'الآن';
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -516,8 +533,8 @@ function applyTheme(period) {
 // ═══════════════ RENDER TODAY ═══════════════
 
 function renderToday() {
-  const today = new Date().toISOString().slice(0,10);
-  const times = getDayTimes(today);
+  const activeDate = getActiveDate();
+  const times = getDayTimes(activeDate);
   const info = getCurrentAndNextPrayer(times);
 
   applyTheme(info.currentPeriod || 'night');
@@ -528,8 +545,8 @@ function renderToday() {
   if (times) {
     html += `<div class="current-name">${info.currentName || '...'}</div>`;
     html += `<div class="countdown" id="countdown">${formatCountdown(info.secondsLeft)}</div>`;
-    html += `<div class="next-label">حتى ${info.next} ${info.nextTime}</div>`;
-    html += `<div class="hijri-date" style="margin-top:10px;">${today}</div>`;
+    html += `<div class="next-label">متبقي حتى أذان ${info.next} — ${info.nextTime}</div>`;
+    html += `<div class="hijri-date" style="margin-top:10px;">${activeDate}</div>`;
   } else {
     html += `<div class="current-name">...</div>`;
     html += `<div class="countdown">--:--</div>`;
@@ -553,7 +570,7 @@ function renderToday() {
     html += `<div class="loading">المواقيت غير متوفرة. قد تحتاج لتحديث التطبيق.</div>`;
   }
 
-  html += `<div class="refresh-bar">المصدر: وزارة الأوقاف الأردنية | ${DATA_COUNT} يوم | عمّان</div>`;
+  html += `<div class="refresh-bar">المصدر: وزارة الأوقاف الأردنية | عمّان</div>`;
 
   document.getElementById('mainScroll').innerHTML = html;
 }
@@ -684,8 +701,8 @@ function startAutoRefresh() {
 }
 
 function updateCountdownOnly() {
-  const today = new Date().toISOString().slice(0,10);
-  const times = getDayTimes(today);
+  const activeDate = getActiveDate();
+  const times = getDayTimes(activeDate);
   if (!times) return;
 
   const info = getCurrentAndNextPrayer(times);
