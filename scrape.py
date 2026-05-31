@@ -9,7 +9,7 @@ The site uses ASP.NET WebForms with __VIEWSTATE/__EVENTVALIDATION tokens.
 Each page shows 10 rows. Covers ~1 year of data.
 
 Usage:  python3 scrape.py
-Output: prayer-times.json
+Output: prayer-times.json and prayers-data.js
 """
 
 import requests
@@ -21,6 +21,7 @@ from datetime import datetime
 
 BASE = "https://www.awqaf.gov.jo/ar/Pages/PrayerTime"
 OUTPUT = "prayer-times.json"
+OUTPUT_JS = "prayers-data.js"
 MIN_DELAY = 2.0
 MAX_RETRIES = 5
 TIMEOUT = 60
@@ -157,6 +158,32 @@ def get_last_page_num(html):
     return 1
 
 
+def build_page_data(page_num, vs, ev):
+    return {
+        "__EVENTTARGET": "ctl00$MainContent$gvWebparts",
+        "__EVENTARGUMENT": f"Page${page_num}",
+        "__VIEWSTATE": vs,
+        "__VIEWSTATEGENERATOR": "CDE16AB2",
+        "__EVENTVALIDATION": ev,
+        "ctl00$MainContent$DropCompany": "1",
+    }
+
+
+def write_outputs(output, rows):
+    with open(OUTPUT, "w", encoding="utf-8") as f:
+        json.dump(output, f, ensure_ascii=False, indent=2)
+
+    first = rows[0]["date"] if rows else "n/a"
+    last = rows[-1]["date"] if rows else "n/a"
+    js = (
+        f"// Prayer times from awqaf.gov.jo — scraped {output['scraped_at']}\n"
+        f"// {len(rows)} entries, {first} to {last}\n"
+        f"const PRAYER_DATA = {json.dumps(rows, ensure_ascii=False)};\n"
+    )
+    with open(OUTPUT_JS, "w", encoding="utf-8") as f:
+        f.write(js)
+
+
 def scrape():
     log("Scraping awqaf.gov.jo prayer times for Amman")
     log("=" * 50)
@@ -192,14 +219,7 @@ def scrape():
 
         log(f"Page {page_num}/{total_pages}...")
 
-        data = {
-            "__EVENTTARGET": "ctl00$MainContent$gvWebparts",
-            "__EVENTARGUMENT": f"Page${page_num}",
-            "__VIEWSTATE": vs,
-            "__VIEWSTATEGENERATOR": "CDE16AB2",
-            "__EVENTVALIDATION": ev,
-            "ctl00$MainContent$DropCompany": "1",
-        }
+        data = build_page_data(page_num, vs, ev)
 
         resp = post_with_retry(data)
         if not resp:
@@ -209,6 +229,7 @@ def scrape():
             refresh = get_with_retry(BASE)
             if refresh:
                 vs, ev = get_form_tokens(refresh.text)
+                data = build_page_data(page_num, vs, ev)
                 resp = post_with_retry(data)
             if not resp:
                 log(f"  Giving up on page {page_num}.")
@@ -250,11 +271,10 @@ def scrape():
         "prayers": all_rows,
     }
 
-    with open(OUTPUT, "w", encoding="utf-8") as f:
-        json.dump(output, f, ensure_ascii=False, indent=2)
+    write_outputs(output, all_rows)
 
     log("=" * 50)
-    log(f"DONE. {len(all_rows)} entries -> {OUTPUT}")
+    log(f"DONE. {len(all_rows)} entries -> {OUTPUT}, {OUTPUT_JS}")
     if all_rows:
         log(f"Range: {all_rows[0]['date']} to {all_rows[-1]['date']}")
 
