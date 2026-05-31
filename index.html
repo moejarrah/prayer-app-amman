@@ -118,16 +118,17 @@
 
     * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
     html {
-      height:100%; overflow:hidden;
-      background:#0a0a1a;
+      height:100vh; height:100dvh; height:-webkit-fill-available;
+      background:#0f3460;
     }
     body {
-      min-height:100vh; min-height:-webkit-fill-available;
+      min-height:100vh; min-height:100dvh; min-height:-webkit-fill-available;
       overflow-x:hidden;
       display:flex; flex-direction:column; position:relative;
       font-family:'Cairo','IBM Plex Sans Arabic',sans-serif;
       background:linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-low) 100%);
-      transition:background 0.8s ease;
+      background-size:cover;
+      transition:background 0.8s ease, color 0.4s;
       color:var(--text);
       -webkit-font-smoothing:antialiased;
     }
@@ -140,7 +141,6 @@
       position:fixed; top:0;left:0;right:0;bottom:0; pointer-events:none; z-index:0;
       background: var(--overlay);
       transition:background var(--transition);
-      padding-bottom:env(safe-area-inset-bottom);
     }
 
     .stars {
@@ -565,7 +565,12 @@ function applyTheme(period) {
     dawn:'#1a1a3e', morning:'#4a90d9', midday:'#5b9bd5',
     afternoon:'#d4a54a', maghrib:'#2c1654', night:'#0a0a1a'
   };
+  const bottomColors = {
+    dawn:'#c44b2b', morning:'#ffe4b5', midday:'#e8d5b7',
+    afternoon:'#f5d580', maghrib:'#e8743c', night:'#1a1a3e'
+  };
   if (meta) meta.content = colors[period] || '#0a0a1a';
+  document.documentElement.style.background = bottomColors[period] || '#1a1a3e';
 
   const showStars = period === 'night' || period === 'dawn';
   const showSun = period === 'morning' || period === 'midday' || period === 'afternoon';
