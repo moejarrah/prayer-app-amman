@@ -160,11 +160,18 @@
     }
     .header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
     .header .city-btn {
-      position:absolute; left:12px; top:50%; transform:translateY(-50%);
+      position:absolute; left:44px; top:50%; transform:translateY(-50%);
       font-size:0.72rem; padding:8px 14px; border-radius:20px;
       border:1px solid var(--surface-strong); background:var(--surface);
       color:var(--text); cursor:pointer; -webkit-appearance:none;
       font-weight:600;
+    }
+    .header .share-btn {
+      position:absolute; left:8px; top:50%; transform:translateY(-50%);
+      width:36px; height:36px; border-radius:50%;
+      border:1px solid var(--surface-strong); background:var(--surface);
+      color:var(--text); cursor:pointer; -webkit-appearance:none;
+      display:flex; align-items:center; justify-content:center;
     }
 
     .main-scroll {
@@ -327,6 +334,12 @@
       text-align:center; font-size:0.65rem; color:var(--text-dim);
       padding:8px; opacity:0.6;
     }
+    .refresh-bar a {
+      color:inherit; text-decoration:underline;
+    }
+      text-align:center; font-size:0.65rem; color:var(--text-dim);
+      padding:8px; opacity:0.6;
+    }
 
     .loading {
       text-align:center; padding:40px; color:var(--text-dim);
@@ -343,6 +356,9 @@
   <div class="header">
     <h1>مواقيت الصلاة</h1>
     <span class="city-btn" onclick="openCitySheet()" id="cityBtn">عمّان</span>
+    <button class="share-btn" onclick="shareApp()" title="مشاركة">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    </button>
   </div>
 
   <div class="main-scroll" id="mainScroll"></div>
@@ -355,7 +371,8 @@
   <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeCitySheet()"></div>
   <div class="city-sheet" id="citySheet">
     <h3>عمّان - وزارة الأوقاف الأردنية</h3>
-    <p style="color:var(--text-dim);padding:12px;text-align:center;">النسخة الحالية تغطي مدينة عمّان فقط.<br>البيانات محدثة من موقع الوزارة.</p>
+    <p style="color:var(--text-dim);padding:12px;text-align:center;line-height:1.7;">البيانات من موقع الوزارة الرسمي<br>تغطي 215 يوماً حتى نهاية 2026<br>تعمل بدون إنترنت بعد التحميل الأول</p>
+    <p style="color:var(--accent);padding:4px 12px;text-align:center;font-size:0.75rem;font-weight:600;">📱 للإضافة للشاشة الرئيسية:<br>• آيفون: شارك ← أضف للشاشة الرئيسية<br>• أندرويد: الثلاث نقاط ← أضف للشاشة الرئيسية</p>
     <button class="sheet-close" onclick="closeCitySheet()">تم</button>
   </div>
 
@@ -585,7 +602,7 @@ function renderToday() {
     html += `<div class="loading">المواقيت غير متوفرة. قد تحتاج لتحديث التطبيق.</div>`;
   }
 
-  html += `<div class="refresh-bar">المصدر: وزارة الأوقاف الأردنية | عمّان</div>`;
+  html += `<div class="refresh-bar"><a href="https://www.awqaf.gov.jo/ar/Pages/PrayerTime" target="_blank" rel="noopener">المصدر: وزارة الأوقاف الأردنية</a> | عمّان</div>`;
 
   document.getElementById('mainScroll').innerHTML = html;
 }
@@ -637,7 +654,7 @@ function renderMonth() {
   html += `</div>`;
 
   html += `<div class="cal-legend">اضغط على أي يوم لعرض المواقيت</div>`;
-  html += `<div class="refresh-bar">المصدر: وزارة الأوقاف الأردنية | عمّان</div>`;
+  html += `<div class="refresh-bar"><a href="https://www.awqaf.gov.jo/ar/Pages/PrayerTime" target="_blank" rel="noopener">المصدر: وزارة الأوقاف الأردنية</a> | عمّان</div>`;
 
   document.getElementById('mainScroll').innerHTML = html;
 }
@@ -702,6 +719,26 @@ function openCitySheet() {
 function closeCitySheet() {
   document.getElementById('citySheet').classList.remove('open');
   document.getElementById('sheetBackdrop').classList.remove('open');
+}
+
+async function shareApp() {
+  const url = window.location.href;
+  const title = 'مواقيت الصلاة - الأردن';
+  const text = 'تطبيق مواقيت الصلاة من وزارة الأوقاف الأردنية. يعمل بدون إنترنت، أضفه لشاشتك الرئيسية.';
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text, url });
+      return;
+    } catch(e) {}
+  }
+  // Fallback: copy link
+  try {
+    await navigator.clipboard.writeText(url);
+    alert('تم نسخ الرابط! أرسله لأصدقائك.');
+  } catch(e) {
+    prompt('انسخ الرابط:', url);
+  }
 }
 
 // ═══════════════ AUTO REFRESH ═══════════════
