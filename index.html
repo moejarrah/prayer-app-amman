@@ -151,8 +151,7 @@
     .sun-glow.show { opacity:1; }
     .moon-icon {
       position:fixed; top:6%;right:12%; pointer-events:none; z-index:0;
-      opacity:0; transition:opacity var(--transition);
-      width:48px; height:48px;
+      font-size:3rem; opacity:0; transition:opacity var(--transition);
     }
     .moon-icon.show { opacity:0.7; }
 
@@ -364,7 +363,7 @@
   <div class="sky-overlay"></div>
   <div class="stars" id="stars"></div>
   <div class="sun-glow"></div>
-  <div class="moon-icon" id="moonIcon"><svg viewBox="0 0 100 100" fill="none"><path d="M60 10C35 10 15 30 15 55C15 80 35 95 60 95C45 85 38 70 38 55C38 40 45 20 60 10Z" fill="rgba(255,255,255,.85)"/></svg></div>
+  <div class="moon-icon">🌙</div>
 
   <div class="header">
     <h1>مواقيت الصلاة</h1>
@@ -567,7 +566,7 @@ function applyTheme(period) {
 
   document.getElementById('stars').classList.toggle('show', showStars);
   document.querySelector('.sun-glow').classList.toggle('show', showSun);
-  document.getElementById('moonIcon').classList.toggle('show', showMoon);
+  document.querySelector('.moon-icon').classList.toggle('show', showMoon);
 }
 
 function getActiveDate() {
@@ -622,7 +621,7 @@ function renderToday() {
   if (times) {
     html += `<div class="today-grid">`;
     PRAYER_KEYS.forEach((key, i) => {
-      const isActive = !isNextDay && !info.isBeforeFajr && info.currentName === PRAYER_NAMES[i];
+      const isActive = !isNextDay && info.currentName === PRAYER_NAMES[i];
       html += `
         <div class="prayer-cell ${isActive?'active':''}">
           <div class="p-name">${PRAYER_NAMES[i]}</div>
