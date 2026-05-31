@@ -259,9 +259,8 @@
 
     .bottom-nav {
       position:fixed; bottom:0;left:0;right:0; z-index:10;
-      background:var(--countdown-bg); border-top:1px solid var(--surface-strong);
-      display:flex; padding:6px 8px env(safe-area-inset-bottom, 6px); gap:4px;
-      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      background:var(--sky-low); border-top:1px solid var(--surface-strong);
+      display:flex; padding:6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); gap:4px;
       justify-content:space-around;
     }
     .bottom-nav button {
