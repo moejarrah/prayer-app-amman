@@ -37,6 +37,7 @@
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
+    :root.dawn,
     body.dawn {
       --sky-top: #1a1a3e;
       --sky-mid: #2d1b69;
@@ -47,6 +48,7 @@
       --prayer-active-border: rgba(232,150,94,0.4);
     }
 
+    :root.morning,
     body.morning {
       --sky-top: #4a90d9;
       --sky-mid: #87ceeb;
@@ -64,6 +66,7 @@
       --overlay: rgba(255,255,255,0.15);
     }
 
+    :root.midday,
     body.midday {
       --sky-top: #5b9bd5;
       --sky-mid: #87ceeb;
@@ -81,6 +84,7 @@
       --overlay: rgba(255,255,255,0.1);
     }
 
+    :root.afternoon,
     body.afternoon {
       --sky-top: #d4a54a;
       --sky-mid: #e8c56a;
@@ -98,6 +102,7 @@
       --overlay: rgba(255,255,255,0.08);
     }
 
+    :root.maghrib,
     body.maghrib {
       --sky-top: #2c1654;
       --sky-mid: #6b2440;
@@ -108,6 +113,7 @@
       --prayer-active-border: rgba(240,128,80,0.4);
     }
 
+    :root.night,
     body.night {
       --sky-top: #0a0a1a;
       --sky-mid: #111130;
@@ -121,8 +127,9 @@
     * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
     html {
       height:100%;
-      height:-webkit-fill-available;
       overscroll-behavior:none;
+      background:var(--sky-low);
+      color-scheme:dark;
     }
     body {
       min-height:100vh;
@@ -134,18 +141,12 @@
       display:flex; flex-direction:column;
       font-family:'Cairo','IBM Plex Sans Arabic',sans-serif;
       background:linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-low) 100%);
+      background-color:var(--sky-low);
       transition:background 0.8s ease, color 0.4s;
       color:var(--text);
       -webkit-font-smoothing:antialiased;
       position:relative;
       width:100%;
-    }
-
-    @supports (-webkit-touch-callout: none) {
-      body {
-        min-height:-webkit-fill-available;
-        height:-webkit-fill-available;
-      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -577,9 +578,12 @@ function formatCountdown(seconds) {
 
 function applyTheme(period) {
   const body = document.getElementById('body');
+  const root = document.documentElement;
   const classes = ['dawn','morning','midday','afternoon','maghrib','night'];
   body.classList.remove(...classes);
+  root.classList.remove(...classes);
   body.classList.add(period);
+  root.classList.add(period);
 
   const meta = document.querySelector('meta[name="theme-color"]');
   const colors = {

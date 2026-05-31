@@ -1,4 +1,4 @@
-const CACHE = "prayer-times-v5";
+const CACHE = "prayer-times-v6";
 const STATIC_FILES = ["./", "./index.html", "./manifest.json", "./prayers-data.js", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 const STATIC_PATHS = new Set(
   STATIC_FILES
