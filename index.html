@@ -35,6 +35,7 @@
       --transition: 0.8s ease;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --unsafe-bottom-offset: env(safe-area-inset-bottom, 0px);
       --app-bg: #0a0a1a;
       --nav-bg: #1a1a3e;
     }
@@ -149,8 +150,8 @@
     body::after {
       content:"";
       position:fixed;
-      left:0; right:0; bottom:0;
-      height:max(48px, env(safe-area-inset-bottom, 0px));
+      left:0; right:0; bottom:calc(0px - var(--unsafe-bottom-offset));
+      height:calc(56px + var(--unsafe-bottom-offset));
       background:var(--nav-bg);
       pointer-events:none;
       z-index:9;
@@ -288,7 +289,7 @@
     }
 
     .bottom-nav {
-      position:fixed; bottom:0;left:0;right:0; z-index:10;
+      position:fixed; bottom:calc(0px - var(--unsafe-bottom-offset));left:0;right:0; z-index:10;
       background:var(--nav-bg); border-top:1px solid var(--surface-strong);
       display:flex; padding:6px 8px calc(6px + var(--safe-bottom)); gap:4px;
       padding-bottom:calc(6px + constant(safe-area-inset-bottom));
@@ -358,9 +359,9 @@
     }
     .sheet-backdrop.open { opacity:1; pointer-events:auto; }
     .city-sheet {
-      position:fixed; bottom:0;left:0;right:0; z-index:21;
+      position:fixed; bottom:calc(0px - var(--unsafe-bottom-offset));left:0;right:0; z-index:21;
       background:var(--sky-top); border-radius:18px 18px 0 0;
-      padding:20px 18px calc(28px + var(--safe-bottom));
+      padding:20px 18px calc(28px + var(--safe-bottom) + var(--unsafe-bottom-offset));
       box-shadow:0 -6px 30px rgba(0,0,0,0.4);
       transform:translateY(100%); transition:transform 0.3s ease;
       max-height:70vh; overflow-y:auto;
@@ -467,6 +468,25 @@ function localDateStr(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
+function updateViewportInsets() {
+  const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+  const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!isStandalone || !isiOS) return;
+
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;left:0;bottom:0;width:0;height:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;';
+  document.body.appendChild(probe);
+  const cssSafeTop = parseFloat(getComputedStyle(probe).paddingTop) || 0;
+  const cssSafeBottom = parseFloat(getComputedStyle(probe).paddingBottom) || 0;
+  probe.remove();
+
+  const screenGap = Math.max(0, (window.screen && window.screen.height ? window.screen.height : 0) - window.innerHeight);
+  const inferredBottom = Math.max(0, screenGap - cssSafeTop);
+  const fallbackBottom = inferredBottom > 0 && inferredBottom <= 56 ? inferredBottom : 34;
+  const offset = Math.min(Math.max(cssSafeBottom, fallbackBottom), 56);
+  document.documentElement.style.setProperty('--unsafe-bottom-offset', offset + 'px');
+}
+
 const PRAYER_NAMES = ['الفجر', 'الشروق', 'الظهر', 'العصر', 'المغرب', 'العشاء'];
 const PRAYER_KEYS = ['fajr', 'shuruq', 'dhuhr', 'asr', 'maghrib', 'isha'];
 const PRAYER_PERIODS = ['dawn', 'morning', 'midday', 'afternoon', 'maghrib', 'night'];
@@ -502,6 +522,7 @@ function checkTimezone() {
 }
 
 function init() {
+  updateViewportInsets();
   checkTimezone();
   const now = new Date();
   calYear = now.getFullYear();
@@ -867,6 +888,9 @@ if ('serviceWorker' in navigator) {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+window.addEventListener('resize', updateViewportInsets);
+window.addEventListener('orientationchange', () => setTimeout(updateViewportInsets, 250));
+window.addEventListener('pageshow', updateViewportInsets);
 </script>
 </body>
 </html>
