@@ -1,72 +1,51 @@
-const CACHE = "prayer-times-v9";
-const STATIC_FILES = ["./", "./index.html", "./manifest.json", "./prayers-data.js", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
-const STATIC_PATHS = new Set(
-  STATIC_FILES
-    .filter(file => file !== "./")
-    .map(file => new URL(file, self.registration.scope).pathname)
-);
-const DATA_PATH = new URL("./prayers-data.js", self.registration.scope).pathname;
+const CACHE = "prayer-times-v10";
+const FILES = [
+  "./",
+  "./index.html",
+  "./sw.js",
+  "./manifest.json",
+  "./prayers-data.js",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./apple-touch-icon.png"
+];
 
-self.addEventListener("install", e => {
+self.addEventListener("install", event => {
   self.skipWaiting();
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(STATIC_FILES))
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
+});
+
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))
+      .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener("activate", e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
-});
+self.addEventListener("fetch", event => {
+  if (event.request.method !== "GET") return;
 
-self.addEventListener("fetch", e => {
-  if (e.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
 
-  const url = new URL(e.request.url);
+  event.respondWith(
+    caches.match(event.request).then(cached => {
+      const fetchPromise = fetch(event.request).then(response => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE).then(cache => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => {
+        if (cached) return cached;
+        if (event.request.mode === "navigate") {
+          return caches.match("./index.html").then(index => index || caches.match("./"));
+        }
+        return new Response("", { status: 504, statusText: "Offline" });
+      });
 
-  if (e.request.mode === "navigate") {
-    e.respondWith(
-      caches.match("./index.html").then(cached => {
-        const networkFetch = fetch(e.request).then(res => {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put("./index.html", clone));
-          return res;
-        }).catch(() => cached);
-        return networkFetch;
-      })
-    );
-    return;
-  }
-
-  if (url.origin === self.location.origin && url.pathname === DATA_PATH) {
-    e.respondWith(
-      fetch(e.request).then(res => {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-        return res;
-      }).catch(() => caches.match(e.request))
-    );
-    return;
-  }
-
-  if (url.origin === self.location.origin && STATIC_PATHS.has(url.pathname)) {
-    e.respondWith(
-      caches.match(e.request).then(cached => {
-        const networkFetch = fetch(e.request).then(res => {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-          return res;
-        }).catch(() => cached);
-        return cached || networkFetch;
-      })
-    );
-    return;
-  }
-
-  e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
+      return cached || fetchPromise;
+    })
   );
 });

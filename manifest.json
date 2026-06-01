@@ -3,6 +3,7 @@
   "short_name": "مواقيت الصلاة",
   "description": "مواقيت الصلاة من وزارة الأوقاف الأردنية - تعمل بدون إنترنت",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#1a1a2e",
